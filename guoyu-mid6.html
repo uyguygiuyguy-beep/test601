@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>六上國語期中考檢討</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bpmf+Zihi+Kai+Std&display=swap">
+<style>
+/* Layout: one exam section per screen, like a single sheet of 作業簿; blue pen = student, red pen = grading */
+:root {
+  --page: #EEF2F6;
+  --sheet: #FFFFFF;
+  --ink: #1E2A3A;
+  --muted: #5B6878;
+  --line: #D5DCE5;
+  --grid: #E6ECF3;
+  --blue: #2350A8;
+  --blue-soft: #E5ECF9;
+  --red: #C2362B;
+  --red-soft: #FBE9E6;
+  --green: #1D7548;
+  --green-soft: #E3F2E9;
+  --zy: "Bpmf Zihi Kai Std", "BiauKai", "DFKai-SB", "Kaiti TC", "STKaiti", serif;
+  --kai: "BiauKai", "DFKai-SB", "Kaiti TC", "STKaiti", "PingFang TC", "Microsoft JhengHei", serif;
+  --ui: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --page: #11161D; --sheet: #1A222C; --ink: #E5EAF0; --muted: #9AA6B5; --line: #2D3946; --grid: #212B36;
+  --blue: #86A8F2; --blue-soft: #1C2943; --red: #F2867B; --red-soft: #3A1E1B; --green: #66C895; --green-soft: #163223;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --page: #11161D; --sheet: #1A222C; --ink: #E5EAF0; --muted: #9AA6B5; --line: #2D3946; --grid: #212B36;
+  --blue: #86A8F2; --blue-soft: #1C2943; --red: #F2867B; --red-soft: #3A1E1B; --green: #66C895; --green-soft: #163223;
+  color-scheme: dark }
+html.nozy { --zy: var(--kai); }
+
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--ui); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 40px;
+  -webkit-text-size-adjust: 100%; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--page); }
+.wrap { max-width: 760px; margin: 0 auto; }
+.zy { font-family: var(--zy); }
+.plain { font-family: var(--ui); }
+button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--page); padding-block: 12px 10px; border-bottom: 1px solid var(--line); }
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { font-size: 14px; color: var(--muted); letter-spacing: .04em; min-width: 0; }
+.brand b { color: var(--ink); font-size: 16px; letter-spacing: 0; }
+.zytoggle { border: 1px solid var(--line); background: var(--sheet); border-radius: 999px; padding: 6px 12px; font-size: 14px; white-space: nowrap; }
+.zytoggle[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); }
+.steps { display: flex; gap: 6px; margin-top: 10px; overflow-x: auto; scrollbar-width: none; }
+.steps::-webkit-scrollbar { display: none; }
+.step { flex: 1 0 auto; min-width: 34px; text-align: center; font-size: 14px; padding: 4px 6px; border-radius: 8px; background: var(--sheet); border: 1px solid var(--line); color: var(--muted); }
+.step.done { background: var(--green-soft); border-color: transparent; color: var(--green); }
+.step.now { background: var(--blue); border-color: var(--blue); color: var(--sheet); font-weight: 700; }
+
+/* section */
+.sec-head { padding-block: 22px 14px; display: grid; gap: 4px; }
+.sec-tag { font-size: 14px; color: var(--blue); font-weight: 700; letter-spacing: .1em; }
+.sec-head h1 { margin: 0; font-size: 30px; line-height: 1.4; text-wrap: balance; }
+.sec-head .meta { margin: 0; color: var(--muted); font-size: 15px; }
+
+.btn { border-radius: 14px; min-height: 54px; padding: 8px 18px; border: 2px solid transparent; font-size: 19px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-primary { background: var(--blue); color: var(--sheet); }
+.btn-primary:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+.btn-ghost { background: var(--sheet); border-color: var(--line); }
+.btn-good { background: var(--green-soft); color: var(--green); border-color: var(--green); width: 100%; }
+.btn-good:active { transform: translateY(1px); }
+
+.items { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 14px; }
+.item { background: var(--sheet); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.item.is-right { border-color: color-mix(in srgb, var(--green) 45%, var(--line)); }
+.item.is-wrong { border-color: color-mix(in srgb, var(--red) 55%, var(--line)); }
+.qrow { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; }
+.num { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 18px; background: var(--blue-soft); color: var(--blue); font-variant-numeric: tabular-nums; }
+.is-right .num { background: var(--green); color: var(--sheet); }
+.is-wrong .num { background: transparent; color: var(--red); border: 3px solid var(--red); }
+.q { font-size: 23px; line-height: 2; min-width: 0; overflow-wrap: anywhere; }
+.key { background: var(--blue-soft); color: var(--blue); border-radius: 6px; padding: 0 .18em; font-weight: 700; }
+.key.plain { font-size: .9em; letter-spacing: .05em; }
+.choices { list-style: none; margin: 0; padding: 0 0 0 52px; display: grid; gap: 4px; font-size: 21px; line-height: 1.9; }
+.choices li { display: grid; grid-template-columns: 1.6em 1fr; }
+.choices .cn { font-family: var(--ui); color: var(--muted); }
+.group { background: var(--blue-soft); border-radius: 12px; padding: 12px 16px; font-size: 20px; line-height: 1.9; display: grid; gap: 2px; }
+.group-title { font-family: var(--ui); font-size: 14px; color: var(--blue); font-weight: 700; letter-spacing: .08em; }
+
+.mark { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mbtn { min-height: 56px; border-radius: 14px; font-size: 20px; font-weight: 700; background: var(--sheet); border: 2px solid var(--line); }
+.mbtn.r { color: var(--green); border-color: var(--green); }
+.mbtn.w { color: var(--red); border-color: var(--red); }
+.mbtn.r[aria-pressed="true"] { background: var(--green); color: var(--sheet); }
+.mbtn.w[aria-pressed="true"] { background: var(--red); color: var(--sheet); }
+
+.answer { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--green-soft); }
+.answer .lbl { font-size: 14px; color: var(--green); font-weight: 700; letter-spacing: .08em; }
+.answer b { font-size: 24px; color: var(--green); }
+.exp { border-radius: 12px; border: 1px dashed var(--line); }
+.exp summary { list-style: none; padding: 10px 14px; font-size: 19px; color: var(--blue); font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.exp summary::-webkit-details-marker { display: none; }
+.exp summary::before { content: "▸"; transition: transform .2s; }
+.exp[open] summary::before { transform: rotate(90deg); }
+.exp p { margin: 0; padding: 0 16px 14px; font-size: 21px; line-height: 2; }
+.is-wrong .exp { border-color: var(--red); background: var(--red-soft); }
+
+.foot { margin-top: 20px; display: grid; gap: 10px; justify-items: center; text-align: center; }
+.foot .btn { width: 100%; }
+.hint { color: var(--muted); font-size: 16px; margin: 0; }
+.hint.warn { color: var(--red); font-weight: 700; }
+
+/* adult gate */
+.gate { margin-top: 28px; background: var(--sheet); border-radius: 20px; border: 2px solid var(--red); padding: 28px 22px; display: grid; gap: 18px; text-align: center;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 28px 28px; }
+.gate h2 { margin: 0; font-size: 32px; color: var(--red); text-wrap: balance; }
+.gate .sum { background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 14px; text-align: left; font-size: 16px; display: grid; gap: 6px; }
+.gate .sum strong { font-size: 18px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 2px 10px; border-radius: 999px; font-size: 14px; background: var(--red-soft); color: var(--red); font-weight: 700; }
+.chip.ok { background: var(--green-soft); color: var(--green); }
+.hold { position: relative; overflow: hidden; width: 100%; min-height: 64px; border-radius: 16px; border: 2px solid var(--blue); background: var(--sheet); color: var(--blue); font-size: 18px; font-weight: 700;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none; --p: 0; }
+.hold::before { content: ""; position: absolute; inset: 0; background: var(--blue-soft); transform: scaleX(var(--p)); transform-origin: left; }
+.hold span { position: relative; }
+.hold.small { min-height: 44px; font-size: 14px; border-width: 1px; color: var(--muted); border-color: var(--line); }
+.linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; font-size: 15px; padding: 6px; }
+
+/* quiz */
+.opts { display: grid; gap: 8px; }
+.opt { text-align: left; min-height: 54px; padding: 8px 16px; border-radius: 12px; border: 2px solid var(--line); background: var(--sheet); font-size: 21px; line-height: 1.8; display: flex; gap: 10px; align-items: center; }
+.opt::before { content: ""; flex: 0 0 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); }
+.opt[aria-checked="true"] { border-color: var(--blue); background: var(--blue-soft); }
+.opt[aria-checked="true"]::before { border-color: var(--blue); background: var(--blue); box-shadow: inset 0 0 0 4px var(--blue-soft); }
+.opt.ok { border-color: var(--green); background: var(--green-soft); }
+.opt.ok::before { border-color: var(--green); background: var(--green); }
+.opt.bad { border-color: var(--red); background: var(--red-soft); }
+.opt.bad::before { border-color: var(--red); background: var(--red); }
+.opt:disabled { cursor: default; color: var(--ink); }
+.src { font-size: 14px; color: var(--muted); }
+.ask { font-size: 19px; color: var(--blue); margin: 0; }
+.score { margin-top: 18px; padding: 18px; border-radius: 16px; background: var(--sheet); border: 1px solid var(--line); display: grid; gap: 4px; text-align: center; }
+.score .big { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.verdict { font-weight: 800; font-size: 20px; }
+.verdict.ok { color: var(--green); }
+.verdict.bad { color: var(--red); }
+
+.celebrate { margin-top: 28px; background: var(--sheet); border-radius: 20px; border: 2px solid var(--green); padding: 30px 22px; text-align: center; display: grid; gap: 14px; }
+.celebrate h2 { margin: 0; font-size: 34px; color: var(--green); }
+.stamp { margin: 0 auto; width: 110px; height: 110px; border-radius: 50%; border: 5px double var(--red); color: var(--red); display: grid; place-items: center; font-size: 26px; font-weight: 800; transform: rotate(-12deg); font-family: var(--kai); }
+.pagefoot { margin-top: 36px; display: grid; justify-items: center; }
+.pagefoot .hold { max-width: 320px; }
+
+@media (max-width: 480px) {
+  .q { font-size: 21px; } .choices { padding-left: 0; font-size: 19px; } .opt { font-size: 19px; }
+  .sec-head h1 { font-size: 26px; } .qrow { grid-template-columns: 34px 1fr; } .num { width: 34px; height: 34px; font-size: 16px; }
+  .mbtn { font-size: 18px; } .item { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="top-row">
+      <div class="brand"><b>六上國語期中考</b>　第一～六課 檢討</div>
+      <button class="zytoggle" id="zytoggle" aria-pressed="true">注音 開</button>
+    </div>
+    <nav class="steps" id="steps" aria-label="進度"></nav>
+  </header>
+  <main id="main"></main>
+  <div class="pagefoot" id="pagefoot"></div>
+</div>
+
+<script>
+const CN = ['①','②','③','④','⑤','⑥'];
+const SECS = [
+ { key:'一', title:'寫出國字', meta:'每題 1 分，共 5 分', items:[
+  { q:'在時間內完成任務，我才能感到「[ㄊㄚˋ]」實。', ans:'踏（踏實）', exp:'「踏實」的「踏」是用腳踩的意思，所以是「足」字旁。腳穩穩踩在地上，心裡就很安穩，這種感覺叫做「踏實」。', opts:['踏','蹋','塔','榻'] },
+  { q:'大自然的「[ㄠˋ]」妙正等著你去探索。', ans:'奧（奧妙）', exp:'「奧」是很深、不容易懂的意思，「奧妙」就是神奇又難懂的道理。不要寫成有水字旁的「澳」，那是海邊的港灣，像「澳洲」。', opts:['奧','澳','懊','傲'] },
+  { q:'校園內「[ㄗㄞ]」種了許多不同種類的花。', ans:'栽（栽種）', exp:'「栽」是把植物種下去，所以字裡有「木」。下面是「火」的「災」是火災、災難，跟種花沒有關係。', opts:['栽','災','哉','載'] },
+  { q:'表哥參加「[ㄅㄧㄢˋ]」論比賽得到第一名。', ans:'辯（辯論）', exp:'辯論是用「說話」來比道理，所以中間是「言」。中間是刀的「辨」是分辨，中間是絲的「辮」是辮子，中間是瓜的「瓣」是花瓣。', opts:['辯','辨','辮','瓣'] },
+  { q:'里長誠「[ㄓˋ]」的邀請社區民眾參加聯誼活動。', ans:'摯（誠摯）', exp:'「摯」是真心、懇切的意思，下面是「手」。「誠摯」就是非常真誠。', opts:['摯','致','質','至'] },
+ ]},
+ { key:'二', title:'寫出注音', meta:'每題 1 分，共 5 分', items:[
+  { q:'這家店的「[杏]」仁茶味道香醇濃郁。', ans:'ㄒㄧㄥˋ', exp:'「杏」唸ㄒㄧㄥˋ，第四聲。結尾是ㄥ（後鼻音），不是ㄣ喔！', opts:['ㄒㄧㄥˋ','ㄒㄧㄣˋ','ㄒㄧㄥˇ','ㄒㄧㄤˋ'] },
+  { q:'遺失錢包的事讓他得到「[慘]」痛的教訓。', ans:'ㄘㄢˇ', exp:'「慘」唸ㄘㄢˇ，第三聲。聲母是ㄘ，不是ㄙ。「慘痛」就是非常痛苦。', opts:['ㄘㄢˇ','ㄘㄢˊ','ㄙㄢˇ','ㄘㄤˇ'] },
+  { q:'小文模「[仿]」搞笑明星的功力真是一流。', ans:'ㄈㄤˇ', exp:'「仿」唸ㄈㄤˇ，第三聲，結尾是ㄤ。「模仿」就是學別人的樣子。', opts:['ㄈㄤˇ','ㄈㄤˊ','ㄈㄢˇ','ㄈㄤˋ'] },
+  { q:'對手踏上舞臺前來道「[賀]」時，我依稀感覺自己眼眶泛淚。', ans:'ㄏㄜˋ', exp:'「賀」唸ㄏㄜˋ，第四聲。上面雖然有「加」，可是不唸ㄐㄧㄚ喔！「道賀」就是去恭喜別人。', opts:['ㄏㄜˋ','ㄏㄜˊ','ㄐㄧㄚˋ','ㄏㄨㄛˋ'] },
+  { q:'警方收到消息，立即循線抓到歹「[徒]」。', ans:'ㄊㄨˊ', exp:'「徒」唸ㄊㄨˊ，第二聲。「歹徒」就是做壞事的壞人。', opts:['ㄊㄨˊ','ㄊㄨˇ','ㄉㄨˊ','ㄊㄡˊ'] },
+ ]},
+ { key:'三', title:'改錯字', meta:'每題 2 分，共 10 分', items:[
+  { q:'你的人慈，讓周圍的人都感到溫暖與安慰。', qq:'你的{人慈}，讓周圍的人都感到溫暖與安慰。', ask:'畫線的語詞有錯字，正確的是哪一個？', ans:'人 → 仁（仁慈）', exp:'「仁慈」是心地善良、對人和氣。表示好心腸的是有「二」的「仁」，不是「人」。', opts:['仁慈','人辭','忍慈','仁詞'] },
+  { q:'故事中，村民用計合力抓住凶很的山賊。', qq:'故事中，村民用計合力抓住{凶很}的山賊。', ask:'畫線的語詞有錯字，正確的是哪一個？', ans:'很 → 狠（凶狠）', exp:'「凶狠」是又凶又可怕。形容凶惡的「狠」是犬字旁，像野獸一樣凶；雙人旁的「很」只用在「很好、很多」。', opts:['凶狠','凶恨','凶痕','兇很'] },
+  { q:'牆上的字跡已被損毀難以辮識。', qq:'牆上的字跡已被損毀難以{辮識}。', ask:'畫線的語詞有錯字，正確的是哪一個？', ans:'辮 → 辨（辨識）', exp:'「辨識」是分辨、認出來，中間是刀，好像用刀把東西分開來看。中間是絲的「辮」是辮子。', opts:['辨識','辯識','瓣識','辮式'] },
+  { q:'這架飛機的機異故障了，沒辦法如期起飛。', qq:'這架飛機的{機異}故障了，沒辦法如期起飛。', ask:'畫線的語詞有錯字，正確的是哪一個？', ans:'異 → 翼（機翼）', exp:'「機翼」是飛機的翅膀。「翼」上面有「羽」，跟羽毛、翅膀有關；「異」是不一樣的意思。', opts:['機翼','機意','機藝','機義'] },
+  { q:'阿姨這次懷孕懷了雙胞抬，全家人都很高興。', qq:'阿姨這次懷孕懷了{雙胞抬}，全家人都很高興。', ask:'畫線的語詞有錯字，正確的是哪一個？', ans:'抬 → 胎（雙胞胎）', exp:'雙胞胎跟身體、肚子裡的寶寶有關，所以是「月（肉）」字旁的「胎」。手字旁的「抬」是把東西舉起來。', opts:['雙胞胎','雙泡胎','雙抱胎','雙胞台'] },
+ ]},
+ { key:'四', title:'圈出正確的語詞', meta:'每題 1 分，共 4 分', items:[
+  { q:'在衝突當下，有時候（沉醉／沉默）不見得是壞事，讓彼此有時間冷靜。', ans:'沉默', exp:'「沉默」是安靜不說話。吵架的時候先不說話，大家才有時間冷靜。「沉醉」是非常陶醉、著迷，放在這裡不合理。', opts:['沉默','沉醉'] },
+  { q:'這家公司拍出許多有趣的（動畫／動聽）電影，深受大家的喜愛。', ans:'動畫', exp:'「動畫電影」就是卡通電影。「動聽」是聲音很好聽，用來說歌聲或音樂，不能拿來說電影。', opts:['動畫','動聽'] },
+  { q:'這首曲子的旋律十分柔和動聽，（撫育／撫慰）了我們的心。', ans:'撫慰', exp:'「撫慰」是安慰，讓心情變好。「撫育」是照顧、養育孩子長大。好聽的音樂讓我們心情變好，所以選「撫慰」。', opts:['撫慰','撫育'] },
+  { q:'這個角落擺滿了貨物，已經沒有（時空／空隙）再容納新的包裹了。', ans:'空隙', exp:'「空隙」是空出來的小地方。角落塞滿了，就是沒有空隙了。「時空」是時間和空間，用在這裡不通順。', opts:['空隙','時空'] },
+ ]},
+ { key:'五', title:'選出正確的字義', meta:'每題 3 分，共 18 分', items:[
+  { head:{t:'第 1～3 題的字義', l:['東西一頭由上直掛而下。','留傳後世。','即將、將要。']},
+    q:'遲到就是要受罰，你就別再「{垂}」死掙扎了吧！', ans:'③ 即將、將要', exp:'「垂死」是快要死掉的意思，所以這裡的「垂」是「快要、將要」。', ask:'這裡的「垂」是什麼意思？', opts:['即將、將要。','東西一頭由上直掛而下。','留傳後世。'] },
+  { q:'長布條從二樓往下緩緩「{垂}」降，看起來十分壯觀。', ans:'① 東西一頭由上直掛而下', exp:'布條從上面掛下來、慢慢往下降，就是「由上往下掛」的意思。', ask:'這裡的「垂」是什麼意思？', opts:['東西一頭由上直掛而下。','留傳後世。','即將、將要。'] },
+  { q:'這幅前無古人的畫作，手法精妙，肯定能名「{垂}」青史。', ans:'② 留傳後世', exp:'「名垂青史」是名字被寫進歷史，一直流傳下去，所以是「留傳後世」。', ask:'這裡的「垂」是什麼意思？', opts:['留傳後世。','東西一頭由上直掛而下。','即將、將要。'] },
+  { head:{t:'第 4～6 題的字義', l:['敏捷。','告誡、示禁。','危險、緊急的消息或狀況。']},
+    q:'他因為違反校規而被記「{警}」告，卻仍不知悔改。', ans:'② 告誡、示禁', exp:'「警告」是嚴肅的提醒，叫他不可以再做錯事，所以是「告誡、示禁」。', ask:'這裡的「警」是什麼意思？', opts:['告誡、示禁。','敏捷。','危險、緊急的消息或狀況。'] },
+  { q:'他機「{警}」的記住肇事逃逸的車牌號碼。', ans:'① 敏捷', exp:'他反應很快，馬上記住車牌。「機警」是聰明又反應快，就是「敏捷」。', ask:'這裡的「警」是什麼意思？', opts:['敏捷。','告誡、示禁。','危險、緊急的消息或狀況。'] },
+  { q:'幸好這起火「{警}」沒有造成人員傷亡。', ans:'③ 危險、緊急的消息或狀況', exp:'「火警」是發生火災的緊急狀況，所以是「危險、緊急的狀況」。', ask:'這裡的「警」是什麼意思？', opts:['危險、緊急的消息或狀況。','敏捷。','告誡、示禁。'] },
+ ]},
+ { key:'六', title:'將語詞填入正確的解釋', meta:'每題 2 分，共 12 分', items:[
+  { head:{t:'語詞', l:['固執','幽暗','精鍊','領悟','偶然','挖苦']},
+    q:'了解、明白。', ans:'④ 領悟', exp:'「領悟」是想通了、明白了道理。', ask:'哪一個語詞是這個意思？', opts:['領悟','偶然','固執','精鍊'] },
+  { q:'昏暗不明。', ans:'② 幽暗', exp:'「幽暗」是光線很少、暗暗的。', ask:'哪一個語詞是這個意思？', opts:['幽暗','挖苦','偶然','領悟'] },
+  { q:'堅持己見、不肯變通。', ans:'① 固執', exp:'「固執」是只相信自己的想法，別人怎麼說都不肯改。', ask:'哪一個語詞是這個意思？', opts:['固執','精鍊','幽暗','挖苦'] },
+  { q:'簡潔精要。', ans:'③ 精鍊', exp:'「精鍊」是用很少的字就說出重點，一點也不囉嗦。', ask:'哪一個語詞是這個意思？', opts:['精鍊','領悟','固執','偶然'] },
+  { q:'碰巧、未曾料想到。', ans:'⑤ 偶然', exp:'「偶然」是剛好碰到、事先沒有想到。', ask:'哪一個語詞是這個意思？', opts:['偶然','幽暗','精鍊','挖苦'] },
+  { q:'用輕薄的話譏諷別人。', ans:'⑥ 挖苦', exp:'「挖苦」是用不好聽的話取笑別人。', ask:'哪一個語詞是這個意思？', opts:['挖苦','固執','領悟','幽暗'] },
+ ]},
+ { key:'七', title:'選擇題', meta:'每題 2 分，共 22 分', items:[
+  { q:'下面哪一組國字的讀音不相同？', choices:['壇／僵','註／駐','蓮／漣','惕／涕'], ci:0, exp:'「壇」唸ㄊㄢˊ，「僵」唸ㄐㄧㄤ，讀音不一樣。其他三組：註、駐都唸ㄓㄨˋ；蓮、漣都唸ㄌㄧㄢˊ；惕、涕都唸ㄊㄧˋ。' },
+  { q:'下面句子中的「　」，按照順序應填入哪三個國字？<br>為了參加校外健行，小華每天「　」習走山路，讓自己的體力經過不斷鍛「　」。走過吊橋時，他握緊兩旁的鐵「　」，一步一步走向終點。', choices:['鍊／練／鏈','練／鍊／鏈','練／鏈／鍊','鏈／鍊／練'], ci:1, exp:'練習的「練」是絲字旁；鍛鍊的「鍊」是金字旁，把金屬打得更堅固；鐵鏈的「鏈」也是金字旁，右邊是「連」，一個一個連起來的鐵環。所以答案是「練／鍊／鏈」。' },
+  { q:'下列哪一個選項的「語句」和「句型」對應正確？', choices:['只要每天練習，就能越來越熟練。（假設複句）','弟弟不但會畫畫，還能設計海報。（並列複句）','雖然比賽遇到大雨，隊員仍完成挑戰。（轉折複句）','因為他細心觀察，所以找到了線索。（遞進複句）'], ci:2, exp:'「雖然……仍……」前後意思轉了一個彎，是轉折複句。①「只要……就……」是條件複句；②「不但……還……」是一層比一層多的遞進複句；④「因為……所以……」是因果複句。' },
+  { q:'「春風輕拍樹梢，邀請嫩芽探出頭來。」下列哪一個選項運用了相同的修辭技巧？', choices:['陽光照在草地，露珠閃閃發亮。','小溪唱著歌，陪我們走過山谷。','遠方的山像一位沉睡的巨人。','他的笑聲響徹雲霄。'], ci:1, exp:'春風會「拍」、會「邀請」，把風當成人來寫，這叫擬人（轉化）。小溪會「唱歌」、會「陪」我們，也是擬人。③用「像」是譬喻；④笑聲傳到雲上是誇飾。' },
+  { q:'「池塘像一面明亮的鏡子，映出岸邊的樹影。」下列哪一個選項運用了相同的修辭技巧？', choices:['微風吹過，樹葉向我們揮手。','雨後的彩虹像一座繽紛的橋。','弟弟跑得比閃電還快。','同學們安靜地坐在教室裡閱讀。'], ci:1, exp:'「池塘像鏡子」用「像」把兩樣東西拿來比，這叫譬喻。「彩虹像一座橋」也是譬喻。①樹葉揮手是擬人；③比閃電還快是故意說得很誇張的誇飾；④沒有用修辭。' },
+  { q:'「他嘴上說自己不緊張，手中的稿紙卻抖個不停。」下列哪一個選項運用了相同的修辭技巧？', choices:['姐姐說她不在意比賽結果，卻一遍又一遍地查看成績。','風兒輕聲唱歌，陪伴我們走回家。','遠方的雲朵像一團團棉花糖。','選手們完成比賽後，一起向觀眾揮手。'], ci:0, exp:'嘴巴說的和真正做的剛好相反，用「卻」把兩件事放在一起比，這叫映襯。姐姐說不在意，「卻」一直查成績，也是說的和做的相反。②是擬人，③是譬喻，④沒有用修辭。' },
+  { q:'「哥哥在比賽中的表現十分突出，□□已經遠遠超出教練原本所預期的，令人驚喜不已。」□中應填入下面哪一個語詞？', choices:['然而','即使','因此','甚至'], ci:3, exp:'前面說表現很好，後面說好到超過教練想的，是「更進一步」，所以用「甚至」。「然而」是轉折，「即使」是假設，「因此」是因果，都接不上。' },
+  { q:'「找不到媽媽給的補習費，她著急得□□熱鍋上的螞蟻。」□中應填入哪個語詞？', choices:['有如','有時','不如','假如'], ci:0, exp:'把著急的她比作熱鍋上的螞蟻，要用表示「好像」的「有如」，這是譬喻。' },
+  { q:'下面哪一個句子的意思前後矛盾不合理？', choices:['以前我不懂得問，現在想問卻找不到樹的蹤影','別人會對他這麼好，我相信他平時也常虧待他人','我喜歡看書，書中常有作者想傳達的道理','種過一棵樹，我們便有機會在樹下納涼'], ci:1, exp:'「虧待」是對別人不好。別人對他好，應該是因為他平常也「善待」別人；說他常常虧待別人，前後就不合理了。' },
+  { q:'下面句子「」中的語詞，哪一個詞性和其他三個不同呢？', choices:['書包裡帶著一套新買的「郵票」','跟同學「辯論」時，他一定站在我這一邊','壯著「膽子」自己上廁所','沒有準備好就溜下了「滑梯」'], ci:1, exp:'郵票、膽子、滑梯都是東西的名稱（名詞）。「辯論」是一個動作（動詞），所以它和別人不一樣。' },
+  { q:'下面哪一個情境符合課本「婆娑」的意思？', choices:['沙漠中出現綠洲的景象','駝背的老婆婆慢慢過馬路','在微風中搖擺的櫻花','海水拍打岸邊的岩石'], ci:2, exp:'「婆娑」是枝葉或舞姿輕輕搖擺的樣子，櫻花在風中搖來搖去最符合。小心不要看到「婆」就想到老婆婆喔！' },
+ ]},
+ { key:'八', title:'選出合適的成語', meta:'每題 6 分，共 24 分', items:[
+  { head:{t:'成語', bp:true, l:['ㄅ 橫行霸道：比喻凶橫不講理。','ㄆ 人云亦云：形容自我沒有獨立的見解。','ㄇ 慷慨解囊：毫不吝嗇給別人經濟援助。','ㄈ 班門弄斧：指在行家面前賣弄本事。']},
+    q:'他在這位聞名國際的書法大師面前高談闊論，無異於（　）。', ans:'ㄈ 班門弄斧', exp:'在書法大師面前賣弄，就像在木匠祖師魯班家門口耍斧頭，所以是「班門弄斧」。', ask:'（　）要填哪一個成語？', opts:['班門弄斧','人云亦云','慷慨解囊','橫行霸道'] },
+  { q:'在各界善心人士爭相（　）後，受困於災區的民眾得以溫飽。', ans:'ㄇ 慷慨解囊', exp:'「囊」是錢袋。大家大方的打開錢袋捐錢幫助災民，就是「慷慨解囊」。', ask:'（　）要填哪一個成語？', opts:['慷慨解囊','班門弄斧','橫行霸道','人云亦云'] },
+  { q:'他在村里間（　），早就不是一天兩天的事了，大家都很氣憤卻又無可奈何，不知道誰能治得了他。', ans:'ㄅ 橫行霸道', exp:'他在村子裡又凶又不講理，大家都很生氣，這就是「橫行霸道」。', ask:'（　）要填哪一個成語？', opts:['橫行霸道','慷慨解囊','人云亦云','班門弄斧'] },
+  { q:'老師總是叮嚀我們養成獨立思考的習慣，不要（　），這樣容易判斷錯誤。', ans:'ㄆ 人云亦云', exp:'要獨立思考，就不要別人說什麼就跟著說什麼，也就是不要「人云亦云」。', ask:'（　）要填哪一個成語？', opts:['人云亦云','橫行霸道','班門弄斧','慷慨解囊'] },
+ ]},
+];
+// fill ids, answers for choice items
+SECS.forEach((s, si) => s.items.forEach((it, ii) => {
+  it.id = si + '-' + ii; it.si = si; it.n = ii + 1;
+  if (it.choices) { it.ans = CN[it.ci] + ' ' + it.choices[it.ci]; it.opts = [it.choices[it.ci], ...it.choices.filter((_, k) => k !== it.ci)]; it.ask = it.ask || ''; }
+}));
+const ITEM = {}; SECS.forEach(s => s.items.forEach(it => ITEM[it.id] = it));
+
+const KEY = 'mid6-guoyu-review-v1';
+const fresh = () => ({ sec: 0, phase: 'review', marks: {}, open: {}, quiz: null, firstWrong: [], zy: true });
+let st;
+try { st = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || 'null') || {}); } catch (e) { st = fresh(); }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+
+const $ = s => document.querySelector(s);
+const fmt = s => s.replace(/\[([^\]]+)\]/g, '<span class="key plain">$1</span>').replace(/\{([^}]+)\}/g, '<span class="key">$1</span>');
+
+function hash(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function order(n, seed) { const a = [...Array(n).keys()]; let x = seed || 1; for (let i = n - 1; i > 0; i--) { x = (Math.imul(x, 1103515245) + 12345) >>> 0; const j = x % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- top ---------- */
+function renderSteps() {
+  const nav = $('#steps'); let h = '';
+  SECS.forEach((s, i) => {
+    const cls = (st.phase === 'review' || st.phase === 'adult') && st.sec === i ? 'now' : (i < st.sec || st.phase === 'quiz' || st.phase === 'done') ? 'done' : '';
+    h += `<span class="step ${cls}">${s.key}</span>`;
+  });
+  h += `<span class="step ${st.phase === 'quiz' ? 'now' : st.phase === 'done' ? 'done' : ''}">錯題</span>`;
+  nav.innerHTML = h;
+  const b = $('#zytoggle'); b.setAttribute('aria-pressed', st.zy); b.textContent = st.zy ? '注音 開' : '注音 關';
+  document.documentElement.classList.toggle('nozy', !st.zy);
+}
+
+/* ---------- review ---------- */
+function itemHTML(it) {
+  const m = st.marks[it.id];
+  const open = st.open[it.id] ?? (m === 'W');
+  let h = `<li class="item ${m === 'R' ? 'is-right' : m === 'W' ? 'is-wrong' : ''}" id="it-${it.id}">`;
+  if (it.head) h += `<div class="group zy"><span class="group-title">${it.head.t}</span>${it.head.l.map((x, k) => `<div>${it.head.bp ? '' : CN[k] + ' '}${x}</div>`).join('')}</div>`;
+  h += `<div class="qrow"><span class="num">${m === 'R' ? '✓' : it.n}</span><div class="q zy">${fmt(it.q)}</div></div>`;
+  if (it.choices) h += `<ol class="choices zy">${it.choices.map((c, k) => `<li><span class="cn">${CN[k]}</span><span>${c}</span></li>`).join('')}</ol>`;
+  h += `<div class="mark"><button class="mbtn r zy" data-act="mark" data-id="${it.id}" data-v="R" aria-pressed="${m === 'R'}">我寫對了</button><button class="mbtn w zy" data-act="mark" data-id="${it.id}" data-v="W" aria-pressed="${m === 'W'}">我寫錯了</button></div>`;
+  if (m) h += `<div class="answer"><span class="lbl">正確答案</span><b class="zy">${it.ans}</b></div>
+    <details class="exp" data-id="${it.id}" ${open ? 'open' : ''}><summary class="zy">${m === 'W' ? '看看為什麼' : '看詳解'}</summary><p class="zy">${fmt(it.exp)}</p></details>`;
+  return h + '</li>';
+}
+function footHTML() {
+  const s = SECS[st.sec]; const left = s.items.filter(it => !st.marks[it.id]).length;
+  return left ? `<p class="hint zy">還有 ${left} 題沒有按喔</p><button class="btn btn-primary zy" disabled>檢討好了</button>`
+              : `<p class="hint zy">每一題都看過了嗎？</p><button class="btn btn-primary zy" data-act="finish">檢討好了</button>`;
+}
+function renderReview() {
+  const s = SECS[st.sec];
+  $('#main').innerHTML = `<section>
+    <div class="sec-head"><span class="sec-tag">第${s.key}大題 ・ ${st.sec + 1} / 8</span><h1 class="zy">${s.title}</h1><p class="meta">${s.meta}</p></div>
+    <button class="btn btn-good zy" data-act="allright">這一大題我全對 ✓</button>
+    <ol class="items">${s.items.map(itemHTML).join('')}</ol>
+    <div class="foot" id="foot">${footHTML()}</div></section>`;
+}
+
+/* ---------- adult gate ---------- */
+function renderAdult() {
+  const s = SECS[st.sec]; const wrong = s.items.filter(it => st.marks[it.id] === 'W');
+  const last = st.sec === SECS.length - 1;
+  $('#main').innerHTML = `<div class="gate">
+    <h2 class="zy">請拿給大人批改</h2>
+    <div class="sum"><strong>第${s.key}大題：${s.title}</strong>
+      <div>孩子自評：寫對 ${s.items.length - wrong.length} 題，寫錯 ${wrong.length} 題</div>
+      <div class="chips">${s.items.map(it => `<span class="chip ${st.marks[it.id] === 'R' ? 'ok' : ''}">第 ${it.n} 題 ${st.marks[it.id] === 'R' ? '對' : '錯'}</span>`).join('')}</div>
+      <div style="color:var(--muted);font-size:14px">請對照考卷確認。若有出入，可以按下方「回去再看一下」讓孩子修改。</div>
+    </div>
+    <button class="hold" data-act="unlock"><span>大人按住 2 秒 → ${last ? '開始錯題測驗' : '開放第' + SECS[st.sec + 1].key + '大題'}</span></button>
+    <button class="linkbtn" data-act="back">回去再看一下</button></div>`;
+}
+
+/* ---------- quiz ---------- */
+function startQuiz(ids, round) { st.quiz = { round, ids, ans: {}, done: false }; st.phase = 'quiz'; }
+function quizItemHTML(id, i) {
+  const it = ITEM[id], q = st.quiz, sel = q.ans[id], ord = order(it.opts.length, hash(id) + q.round * 7919);
+  const ok = q.done && sel === 0;
+  let h = `<li class="item ${q.done ? (ok ? 'is-right' : 'is-wrong') : ''}">
+    <div class="src">第${SECS[it.si].key}大題・${SECS[it.si].title}・第 ${it.n} 題</div>
+    <div class="qrow"><span class="num">${q.done && ok ? '✓' : i + 1}</span><div class="q zy">${fmt(it.qq || it.q)}</div></div>`;
+  if (it.ask) h += `<p class="ask zy">${it.ask}</p>`;
+  else if (!it.choices) h += `<p class="ask zy">選出正確答案：</p>`;
+  h += `<div class="opts" role="radiogroup">${ord.map(o => {
+    let cls = '';
+    if (q.done) { if (o === 0) cls = 'ok'; else if (o === sel) cls = 'bad'; }
+    return `<button class="opt zy ${cls}" role="radio" aria-checked="${sel === o}" data-act="pick" data-id="${id}" data-o="${o}" ${q.done ? 'disabled' : ''}>${it.opts[o]}</button>`;
+  }).join('')}</div>`;
+  if (q.done) h += `<div class="verdict zy ${ok ? 'ok' : 'bad'}">${ok ? '答對了！' : '再想想，正確答案是：' + it.opts[0]}</div>
+    <details class="exp" ${ok ? '' : 'open'}><summary class="zy">詳解</summary><p class="zy">${fmt(it.exp)}</p></details>`;
+  return h + '</li>';
+}
+function renderQuiz(msg) {
+  const q = st.quiz; const right = q.done ? q.ids.filter(id => q.ans[id] === 0).length : 0;
+  let top = `<div class="sec-head"><span class="sec-tag">錯題小測驗 ・ 第 ${q.round} 回</span><h1 class="zy">${q.round === 1 ? '把寫錯的題目再做一次' : '再挑戰一次'}</h1><p class="meta">共 ${q.ids.length} 題，全部選好後按「交卷」</p></div>`;
+  if (q.done) top += `<div class="score"><span class="zy">這一回答對</span><span class="big">${right} / ${q.ids.length}</span><span class="zy">${right === q.ids.length ? '全部答對，太厲害了！' : '錯的題目看完詳解，再做一次吧！'}</span></div>`;
+  let foot;
+  if (!q.done) foot = `${msg ? `<p class="hint warn zy">${msg}</p>` : ''}<button class="btn btn-primary zy" data-act="submit">交卷</button>`;
+  else if (right < q.ids.length) foot = `<button class="btn btn-primary zy" data-act="retry">錯的再做一次</button>`;
+  else foot = `<button class="btn btn-primary zy" data-act="complete">完成！</button>`;
+  $('#main').innerHTML = `<section>${top}<ol class="items">${q.ids.map(quizItemHTML).join('')}</ol><div class="foot">${foot}</div></section>`;
+}
+
+/* ---------- done ---------- */
+function renderDone() {
+  const n = st.firstWrong.length;
+  $('#main').innerHTML = `<div class="celebrate">
+    <div class="stamp">優</div>
+    <h2 class="zy">全部檢討完成！</h2>
+    <p class="zy" style="font-size:20px;margin:0">${n ? `原本寫錯的 ${n} 題，現在都會了。` : '八大題全部都寫對，真棒！'}</p>
+    ${n ? `<button class="btn btn-ghost zy" data-act="again">把原本的錯題再練一次</button>` : ''}
+  </div>`;
+}
+
+function render(scroll) {
+  renderSteps();
+  ({ review: renderReview, adult: renderAdult, quiz: renderQuiz, done: renderDone })[st.phase]();
+  $('#pagefoot').innerHTML = `<button class="hold small" data-act="reset"><span>大人按住 2 秒：從頭開始</span></button>`;
+  if (scroll) window.scrollTo({ top: 0 });
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.classList.contains('hold')) return;
+  const act = b.dataset.act;
+  if (act === 'mark') {
+    st.marks[b.dataset.id] = b.dataset.v; delete st.open[b.dataset.id]; save();
+    const el = document.getElementById('it-' + b.dataset.id);
+    el.outerHTML = itemHTML(ITEM[b.dataset.id]); $('#foot').innerHTML = footHTML();
+    const nb = document.querySelector(`#it-${b.dataset.id} [data-v="${b.dataset.v}"]`); nb && nb.focus({ preventScroll: true });
+  } else if (act === 'allright') {
+    SECS[st.sec].items.forEach(it => { st.marks[it.id] = 'R'; delete st.open[it.id]; }); save(); render();
+    $('#foot').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else if (act === 'finish') { st.phase = 'adult'; save(); render(true); }
+  else if (act === 'back') { st.phase = 'review'; save(); render(true); }
+  else if (act === 'pick') { st.quiz.ans[b.dataset.id] = +b.dataset.o; save();
+    b.parentElement.querySelectorAll('.opt').forEach(o => o.setAttribute('aria-checked', o === b)); }
+  else if (act === 'submit') {
+    const miss = st.quiz.ids.filter(id => st.quiz.ans[id] === undefined);
+    if (miss.length) { renderQuiz(`還有 ${miss.length} 題沒有選喔`); return; }
+    st.quiz.done = true; save(); render(true);
+  } else if (act === 'retry') { startQuiz(st.quiz.ids.filter(id => st.quiz.ans[id] !== 0), st.quiz.round + 1); save(); render(true); }
+  else if (act === 'complete') { st.phase = 'done'; st.quiz = null; save(); render(true); }
+  else if (act === 'again') { startQuiz(st.firstWrong.slice(), 1); save(); render(true); }
+});
+document.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details[data-id]')) { st.open[d.dataset.id] = d.open; save(); } }, true);
+$('#zytoggle').addEventListener('click', () => { st.zy = !st.zy; save(); renderSteps(); });
+
+/* hold-to-confirm (2 s) */
+let H = null;
+function holdDone(act) {
+  if (act === 'unlock') {
+    if (st.sec < SECS.length - 1) { st.sec++; st.phase = 'review'; }
+    else { st.firstWrong = Object.keys(st.marks).filter(k => st.marks[k] === 'W').sort((a, b) => { const [a1, a2] = a.split('-').map(Number), [b1, b2] = b.split('-').map(Number); return a1 - b1 || a2 - b2; });
+      if (st.firstWrong.length) startQuiz(st.firstWrong.slice(), 1); else st.phase = 'done'; }
+  } else if (act === 'reset') { const zy = st.zy; st = fresh(); st.zy = zy; }
+  save(); render(true);
+}
+function holdStart(el) {
+  holdStop(); const t0 = performance.now(); const label = el.querySelector('span'); const orig = label.textContent;
+  H = { el, label, orig, raf: 0 };
+  const tick = now => { const p = Math.min(1, (now - t0) / 2000); el.style.setProperty('--p', p);
+    if (p >= 1) { const act = el.dataset.act; H = null; navigator.vibrate && navigator.vibrate(30); holdDone(act); return; }
+    H.raf = requestAnimationFrame(tick); };
+  label.textContent = '繼續按住…'; H.raf = requestAnimationFrame(tick);
+}
+function holdStop() { if (!H) return; cancelAnimationFrame(H.raf); H.el.style.setProperty('--p', 0); H.label.textContent = H.orig; H = null; }
+document.addEventListener('pointerdown', e => { const el = e.target.closest('.hold'); if (!el) return; e.preventDefault(); holdStart(el); });
+['pointerup', 'pointercancel'].forEach(t => window.addEventListener(t, holdStop));
+document.addEventListener('pointerout', e => { if (H && e.target.closest('.hold') === H.el && !H.el.contains(e.relatedTarget)) holdStop(); });
+document.addEventListener('contextmenu', e => { if (e.target.closest('.hold')) e.preventDefault(); });
+document.addEventListener('keydown', e => { const el = e.target.closest && e.target.closest('.hold'); if (el && (e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); holdStart(el); } });
+document.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') holdStop(); });
+
+render();
+</script>
+
+</body>
+</html>
