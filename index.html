@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>考卷訂正小老師</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: 作業簿方格紙底，一欄卡片，紅筆＝訂正、綠＝寫對；大按鈕給手指點 */
+:root{
+  --paper:#f5f8fa; --grid:rgba(60,110,150,.07); --card:#ffffff; --ink:#1d2933; --muted:#5b6976;
+  --line:#d9e2e9; --red:#cf3b28; --red-soft:#fdecea; --ok:#1d8656; --ok-soft:#e5f5ec;
+  --blue:#2a5fc0; --blue-soft:#e8effc; --amber:#a96500; --amber-soft:#fff3dc; --shade:rgba(20,35,50,.08);
+  --f-disp:"LXGW WenKai TC","Kaiti TC","BiauKai","DFKai-SB",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#12181d; --grid:rgba(140,180,210,.06); --card:#1b232a; --ink:#e7edf2; --muted:#9fb0bd;
+  --line:#2e3a44; --red:#ff7a62; --red-soft:#3a201c; --ok:#4cc58b; --ok-soft:#173327;
+  --blue:#7ea8ff; --blue-soft:#1c2a45; --amber:#f0b04a; --amber-soft:#3a2c14; --shade:rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#12181d; --grid:rgba(140,180,210,.06); --card:#1b232a; --ink:#e7edf2; --muted:#9fb0bd;
+  --line:#2e3a44; --red:#ff7a62; --red-soft:#3a201c; --ok:#4cc58b; --ok-soft:#173327;
+  --blue:#7ea8ff; --blue-soft:#1c2a45; --amber:#f0b04a; --amber-soft:#3a2c14; --shade:rgba(0,0,0,.35); color-scheme:dark}
+
+html,body{min-height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.7;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 120px}
+h1,h2,h3{font-family:var(--f-disp);font-weight:700;text-wrap:balance;margin:0;line-height:1.35}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+button:disabled{cursor:not-allowed;opacity:.5}
+.muted{color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:10px;padding:6px 0 14px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.brand svg{flex:none}
+.brand b{font-family:var(--f-disp);font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:500}
+.chip[aria-pressed="true"]{border-color:var(--blue);color:var(--blue);background:var(--blue-soft)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:56px;padding:10px 22px;border-radius:16px;font-weight:700;font-size:18px;border:2px solid transparent;transition:transform .08s}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn.primary{background:var(--red);color:#fff}
+.btn.blue{background:var(--blue);color:#fff}
+.btn.ghost{background:var(--card);border-color:var(--line)}
+.btn.okb{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.btn.nob{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.btn.wide{width:100%}
+.btn.sm{min-height:44px;font-size:16px;padding:6px 14px;border-radius:12px}
+.link{color:var(--blue);text-decoration:underline;font-size:15px;padding:6px 2px}
+
+/* cards */
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 2px 0 var(--shade)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.label{font-size:13px;letter-spacing:.08em;color:var(--muted);font-weight:700}
+
+/* home */
+.hero{padding:10px 0 4px}
+.hero h1{font-size:clamp(30px,7vw,44px)}
+.hero p{margin:6px 0 0;color:var(--muted)}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:640px){.home-grid{grid-template-columns:1fr}}
+.qrbox{display:flex;justify-content:center;background:#fff;border-radius:14px;padding:12px;border:1.5px solid var(--line)}
+.qrbox svg{width:100%;max-width:240px;height:auto;display:block}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input,.field select{font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);min-width:0;width:100%}
+.steps-mini{margin:0;padding-left:1.3em;color:var(--muted);font-size:15px}
+
+/* capture */
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.thumb{position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;border:1.5px solid var(--line);background:var(--paper)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .n{position:absolute;left:6px;top:6px;background:var(--ink);color:var(--paper);font-size:12px;border-radius:8px;padding:0 7px}
+.thumb button{position:absolute;right:4px;top:4px;width:32px;height:32px;border-radius:50%;background:var(--card);border:1.5px solid var(--line);font-size:18px;line-height:1}
+.drop{border:2px dashed var(--line);border-radius:16px;padding:18px;text-align:center;color:var(--muted)}
+details.opt summary{cursor:pointer;font-weight:700;padding:4px 0}
+.err{background:var(--red-soft);color:var(--red);border-radius:12px;padding:12px 14px;font-weight:500}
+
+/* analyzing */
+.pen{display:flex;justify-content:center;padding:20px 0}
+.pen path{stroke:var(--red);stroke-width:10;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:200;stroke-dashoffset:200;animation:draw 1.6s ease-in-out infinite}
+@keyframes draw{0%{stroke-dashoffset:200}55%,80%{stroke-dashoffset:0}100%{stroke-dashoffset:-200}}
+
+/* review */
+.progress{display:flex;gap:6px;margin:4px 0 12px}
+.progress i{flex:1;height:8px;border-radius:8px;background:var(--line)}
+.progress i.done{background:var(--ok)}
+.progress i.now{background:var(--red)}
+.sec-head{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.sec-head h2{font-size:clamp(24px,5.5vw,32px)}
+.allright{width:100%;min-height:64px;font-size:20px;border-radius:18px;border:2.5px dashed var(--ok);color:var(--ok);background:var(--card);font-weight:700}
+.allright[aria-pressed="true"]{border-style:solid;background:var(--ok-soft)}
+.q{display:flex;flex-direction:column;gap:12px}
+.q.m-right{border-color:var(--ok)}
+.q.m-wrong{border-color:var(--red)}
+.qno{display:flex;align-items:center;gap:10px}
+.qno b{font-family:var(--f-disp);font-size:20px}
+.stamp{margin-left:auto;font-family:var(--f-disp);font-weight:700;font-size:15px;padding:2px 12px;border-radius:999px;border:2px solid currentColor;transform:rotate(-4deg)}
+.stamp.r{color:var(--ok)} .stamp.w{color:var(--red)}
+.qtext{font-size:20px;line-height:2.1;overflow-wrap:anywhere}
+.opts{display:flex;flex-direction:column;gap:4px;padding-left:4px;font-size:18px;line-height:2}
+.mine{font-size:16px;color:var(--muted)}
+.mine span{color:var(--ink);font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ans{border-radius:14px;padding:12px 14px;background:var(--blue-soft)}
+.ans .k{font-size:14px;color:var(--blue);font-weight:700}
+.ans .v{font-size:22px;font-weight:700;color:var(--blue);line-height:2}
+.ans .why{font-size:17px;line-height:2.1}
+.change{align-self:flex-start}
+
+/* guide */
+.guide{border:2px solid var(--red);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--card)}
+.guide-h{display:flex;align-items:center;gap:8px;font-family:var(--f-disp);font-weight:700;color:var(--red);font-size:19px}
+.gstep{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
+.gstep .num{width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-family:var(--f-disp)}
+.gstep .ask{font-weight:700;font-size:18px;line-height:2.1}
+.gstep .say{font-size:18px;line-height:2.1}
+.tip{background:var(--amber-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:17px;line-height:2.1}
+.tip b{color:var(--amber)}
+.viz{background:var(--paper);border-radius:12px;padding:10px;overflow-x:auto}
+.viz svg{display:block;max-width:100%;height:auto;margin:0 auto}
+.viz .cap{text-align:center;font-size:15px;color:var(--muted);line-height:2}
+.vert{font-family:var(--f-mono);font-size:28px;line-height:1.35;white-space:pre;display:table;margin:0 auto;padding:4px 10px}
+.vert .res{border-top:3px solid var(--ink);color:var(--red);font-weight:700}
+.vert .carry{color:var(--red);font-size:18px}
+.loading{display:flex;align-items:center;gap:10px;color:var(--muted)}
+.dots i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px;animation:bob 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bob{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}
+
+/* bottom bar */
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:5;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(6px);border-top:1.5px solid var(--line);
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bottom .in{max-width:760px;margin:0 auto}
+
+/* adult */
+.adult{display:flex;flex-direction:column;gap:18px;align-items:stretch;padding-top:10px}
+.adult h1{font-size:clamp(34px,9vw,52px);color:var(--red);text-align:center}
+.sum{display:flex;flex-direction:column;gap:8px}
+.sum .it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 12px;border-radius:12px;background:var(--paper);font-size:15px;line-height:1.6}
+.sum .it .t{min-width:0;overflow-wrap:anywhere}
+.flag{grid-column:1/-1;color:var(--amber);background:var(--amber-soft);border-radius:8px;padding:4px 8px;font-size:14px}
+.hold{position:relative;overflow:hidden;width:100%;min-height:84px;border-radius:22px;background:var(--ink);color:var(--paper);font-size:22px;font-weight:700;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.hold .fill{position:absolute;inset:0;width:0;background:var(--ok)}
+.hold span{position:relative}
+
+/* quiz */
+.qz-choice{display:flex;flex-direction:column;gap:8px}
+.qz-choice button{text-align:left;border:2px solid var(--line);border-radius:14px;padding:10px 14px;font-size:18px;background:var(--card);min-height:52px;line-height:2}
+.qz-choice button[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.qz-in{font:inherit;font-size:22px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+.res-ok{color:var(--ok);font-weight:700}.res-no{color:var(--red);font-weight:700}
+.score{font-family:var(--f-disp);font-size:clamp(40px,12vw,64px);text-align:center;line-height:1.2}
+.celebrate{text-align:center;padding:20px 0}
+.celebrate svg{width:140px;height:140px}
+details.more summary{cursor:pointer;color:var(--blue);font-weight:500}
+
+/* qr corner + fullscreen */
+.qrmini{flex:none;width:52px;height:52px;padding:4px;border-radius:12px;background:#fff;border:1.5px solid var(--line);display:grid;place-items:center}
+.qrmini svg{width:100%;height:100%;display:block}
+.brandbtn{display:flex;align-items:center;gap:10px;min-width:0;text-align:left}
+.qrfull{position:fixed;inset:0;z-index:50;background:#fff;color:#1d2933;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.qrfull .big{width:min(82vw,72vh,560px);aspect-ratio:1}
+.qrfull .big svg{width:100%;height:100%;display:block}
+.qrfull h2{font-size:clamp(26px,6vw,40px);color:#1d2933;text-align:center}
+.qrfull .u{font-family:var(--f-mono);font-size:14px;color:#5b6976;overflow-wrap:anywhere;text-align:center;max-width:90vw}
+.qrfull .x{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));min-height:48px;padding:8px 18px;border-radius:14px;border:2px solid #d9e2e9;background:#fff;color:#1d2933;font-weight:700;font-size:17px}
+.bar-prog{height:10px;border-radius:10px;background:var(--line);overflow:hidden}.bar-prog i{display:block;height:100%;background:var(--blue)}
+/* zhuyin */
+.zy{display:inline-flex;align-items:center;vertical-align:middle;margin:0 .03em}
+.zc{line-height:1.15}
+.zb{display:inline-flex;align-items:center;margin-left:.06em;font-size:.36em;line-height:1;font-family:var(--f-body);font-weight:400}
+.zs{display:flex;flex-direction:column;align-items:center}
+.zs span{display:block;line-height:1.04}
+.zb i{font-style:normal}
+.zb .tn{margin-left:.05em;align-self:center}
+.zb .t0{line-height:.7}
+.nozy .zb{display:none}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.pen path{stroke-dashoffset:0}}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.js"></script>
+<script>
+(() => {
+const DEFAULT_LINK = "https://claude.ai/artifact/QdFtU988MmS9xrBj2tjnPF";
+const KEY = "kaojuan-v1";
+const $app = document.getElementById("app");
+
+/* ---------- state ---------- */
+let S = { view:"home", zy:true, exam:null, sec:0, quiz:null, link:DEFAULT_LINK, grade:"" };
+let photos = [], keyPhotos = [], analyzeErr = "", analyzeCtl = null, analyzeMsg = "";
+let sample = null, sampleImages = false, sampleChecked = false, downloads = null, PRESET = null, exporting = null, qrOpen = false;
+const HOSTED = !window.claude; // 放在 GitHub Pages 等一般網站時沒有 Claude
+function myUrl(){ return HOSTED ? location.origin + location.pathname : (S.link || DEFAULT_LINK); }
+try { const raw = localStorage.getItem(KEY); if (raw) { const o = JSON.parse(raw); S = Object.assign(S, o); if (!["home","review","adult","done","quiz","result"].includes(S.view)) S.view = "home"; if(!S.link) S.link = DEFAULT_LINK; } } catch(e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+
+/* ---------- zhuyin ---------- */
+const INI={b:'ㄅ',p:'ㄆ',m:'ㄇ',f:'ㄈ',d:'ㄉ',t:'ㄊ',n:'ㄋ',l:'ㄌ',g:'ㄍ',k:'ㄎ',h:'ㄏ',j:'ㄐ',q:'ㄑ',x:'ㄒ',zh:'ㄓ',ch:'ㄔ',sh:'ㄕ',r:'ㄖ',z:'ㄗ',c:'ㄘ',s:'ㄙ'};
+const FIN={a:'ㄚ',o:'ㄛ',e:'ㄜ','ê':'ㄝ',ai:'ㄞ',ei:'ㄟ',ao:'ㄠ',ou:'ㄡ',an:'ㄢ',en:'ㄣ',ang:'ㄤ',eng:'ㄥ',er:'ㄦ',ong:'ㄨㄥ',i:'ㄧ',ia:'ㄧㄚ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',iou:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',iong:'ㄩㄥ',io:'ㄧㄛ',u:'ㄨ',ua:'ㄨㄚ',uo:'ㄨㄛ',uai:'ㄨㄞ',ui:'ㄨㄟ',uei:'ㄨㄟ',uan:'ㄨㄢ',un:'ㄨㄣ',uen:'ㄨㄣ',uang:'ㄨㄤ',ueng:'ㄨㄥ','ü':'ㄩ','üe':'ㄩㄝ','üan':'ㄩㄢ','ün':'ㄩㄣ'};
+const YW={yi:'ㄧ',ya:'ㄧㄚ',yo:'ㄧㄛ',ye:'ㄧㄝ',yai:'ㄧㄞ',yao:'ㄧㄠ',you:'ㄧㄡ',yan:'ㄧㄢ',yin:'ㄧㄣ',yang:'ㄧㄤ',ying:'ㄧㄥ',yong:'ㄩㄥ',yu:'ㄩ',yue:'ㄩㄝ',yuan:'ㄩㄢ',yun:'ㄩㄣ',wu:'ㄨ',wa:'ㄨㄚ',wo:'ㄨㄛ',wai:'ㄨㄞ',wei:'ㄨㄟ',wan:'ㄨㄢ',wen:'ㄨㄣ',wang:'ㄨㄤ',weng:'ㄨㄥ'};
+const TONE={'1':'','2':'ˊ','3':'ˇ','4':'ˋ'};
+// 台灣常用讀音修正（國語辭典讀法）
+const TW={'垃':'le4','圾':'se4','企':'qi4','期':'qi2','微':'wei2','危':'wei2','暫':'zhan4','研':'yan2','液':'yi4','俱':'ju4','質':'zhi2','血':'xie3','和':null};
+function toZy(py){
+  if(!py) return null;
+  const s0 = String(py).toLowerCase().replace(/u:|v/g,'ü');
+  const m = /^([a-zêü]+)([0-5])?$/.exec(s0); if(!m) return null;
+  const s = m[1], t = m[2] || '5';
+  let body;
+  if (s==='er') body='ㄦ';
+  else if (YW[s]) body=YW[s];
+  else {
+    const ini = /^(zh|ch|sh)/.test(s) ? s.slice(0,2) : (INI[s[0]] ? s[0] : '');
+    let fin = s.slice(ini.length);
+    if (/^[jqxy]$/.test(ini) && fin[0]==='u') fin = 'ü'+fin.slice(1);
+    if (/^(zh|ch|sh|r|z|c|s)$/.test(ini) && fin==='i') fin='';
+    if (fin && !FIN[fin]) return null;
+    body = (INI[ini]||'') + (fin ? FIN[fin] : '');
+  }
+  if (!body) return null;
+  if (t==='5'||t==='0') return {body, tone:'', neutral:true};
+  return {body, tone:TONE[t]||''};
+}
+const HAN = /[㐀-鿿豈-﫿]/;
+function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function zyUnit(ch, py){
+  const z = toZy(py);
+  if(!z) return esc(ch);
+  const syms = [...z.body].map(c=>`<span>${c}</span>`).join("");
+  return `<span class="zy"><span class="zc">${esc(ch)}</span><span class="zb" aria-hidden="true"><span class="zs">${z.neutral?'<i class="t0">˙</i>':''}${syms}</span>${z.tone?`<i class="tn">${z.tone}</i>`:''}</span></span>`;
+}
+const zCache = new Map();
+function Z(text){
+  text = String(text ?? "");
+  const P = window.pinyinPro;
+  if (!P || !HAN.test(text)) return esc(text).replace(/\n/g,"<br>");
+  if (zCache.has(text)) return zCache.get(text);
+  let out = "";
+  try {
+    const arr = P.pinyin(text, {type:"all", toneType:"num"});
+    if (Array.isArray(arr) && arr.length && typeof arr[0]==="object") {
+      for (const it of arr) {
+        const ch = it.origin;
+        if (HAN.test(ch)) { const tw = TW[ch]; out += zyUnit(ch, tw===null||tw===undefined ? it.pinyin : tw); }
+        else out += ch==="\n" ? "<br>" : esc(ch);
+      }
+    } else throw 0;
+  } catch(e) {
+    try {
+      const chars = [...text];
+      const pys = P.pinyin(text, {type:"array", toneType:"num"});
+      if (pys.length !== chars.length) throw 0;
+      chars.forEach((ch,i)=>{ out += HAN.test(ch) ? zyUnit(ch, TW[ch]||pys[i]) : (ch==="\n"?"<br>":esc(ch)); });
+    } catch(e2) { out = esc(text).replace(/\n/g,"<br>"); }
+  }
+  zCache.set(text, out);
+  return out;
+}
+
+/* ---------- helpers ---------- */
+const qid = (si,qi) => si+"-"+qi;
+function allQs(){ const r=[]; (S.exam?.sections||[]).forEach((s,si)=>s.questions.forEach((q,qi)=>r.push({q,si,qi,id:qid(si,qi)}))); return r; }
+function getQ(id){ const [si,qi]=id.split("-").map(Number); return S.exam.sections[si].questions[qi]; }
+function norm(s){
+  return String(s??"").toLowerCase()
+    .replace(/[０-９ａ-ｚ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0))
+    .replace(/[①②③④⑤⑥]/g,c=>"①②③④⑤⑥".indexOf(c)+1+"")
+    .replace(/[（(]\s*([0-9a-d])\s*[)）]/g,"$1")
+    .replace(/[\s，,。、．.:：;；!！?？「」『』（）()]/g,"")
+    .replace(/[×xX＊*]/g,"×");
+}
+function optionKey(o){ const m = norm(o).match(/^([0-9a-d])/); return m?m[1]:norm(o); }
+const LOGO = `<svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="3" width="26" height="34" rx="4" fill="var(--card)" stroke="var(--line)" stroke-width="2"/><path d="M10 13h14M10 19h10M10 25h12" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"/><path d="M19 27l4 4 10-13" stroke="var(--red)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function topBar(extra=""){
+  const qr = qrSvg(myUrl());
+  return `<div class="top"><div class="brand"><button class="brandbtn" data-act="home" aria-label="回首頁">${LOGO}<b>${esc(S.exam && S.view!=="home" ? (S.exam.title||"考卷訂正") : "考卷訂正小老師")}</b></button></div>
+  ${extra}
+  <button class="chip" data-act="zy" aria-pressed="${S.zy}">ㄅㄆㄇ 注音</button>
+  ${qr?`<button class="qrmini" data-act="qr-open" aria-label="放大 QR code 給學生掃描">${qr}</button>`:""}</div>`;
+}
+
+/* ---------- demo exam ---------- */
+const DEMO = {
+  title:"範例：三年級數學小考", grade:"三年級", subject:"數學", demo:true,
+  sections:[
+    {title:"一、選擇題", questions:[
+      {no:"1", q:"365 + 248 = ？", options:["① 503","② 613","③ 603","④ 513"], student:"④", answer:"② 613",
+       why:"個位 5+8=13 要進位 1，十位 6+4+1=11 又要進位 1，百位 3+2+1=6，所以是 613。",
+       quiz:{type:"choice", options:["① 503","② 613","③ 603","④ 513"], answer:"② 613"},
+       guide:{steps:[
+         {ask:"先算個位：5 加 8 是多少？", say:"5+8=13。13 比 10 大，個位寫 3，把 1 個十送到十位去（進位）。"},
+         {ask:"十位：6 加 4，再加剛剛送來的 1，是多少？", say:"6+4+1=11。十位寫 1，再把 1 個百送到百位。"},
+         {ask:"百位：3 加 2，再加送來的 1 呢？", say:"3+2+1=6。百位寫 6，答案就是 613。"},
+         {ask:"", say:"你選的 513，是百位忘了加進位的 1 喔！"}],
+         tip:"直式加法：每一位滿 10，就要往左邊送 1。",
+         visual:{type:"vertical", carry:" 11 ", lines:["  365","+ 248"], result:"  613", caption:"紅色的小 1 是進位"}}},
+      {no:"2", q:"把一個披薩平分成 8 片，吃掉 3 片，吃掉的是幾分之幾？", options:["① 3/8","② 5/8","③ 8/3"], student:"①", answer:"① 3/8",
+       why:"平分成 8 片，分母是 8；吃掉 3 片，分子是 3，所以是 8 分之 3。",
+       quiz:{type:"choice", options:["① 3/8","② 5/8","③ 8/3"], answer:"① 3/8"},
+       guide:{steps:[
+         {ask:"披薩一共切成幾片？", say:"8 片。全部的片數放在下面，叫做分母。"},
+         {ask:"吃掉幾片？", say:"3 片。吃掉的片數放在上面，叫做分子。"},
+         {ask:"", say:"所以吃掉的是 3/8，讀作「八分之三」。"}],
+         tip:"下面是「一共幾份」，上面是「拿走幾份」。",
+         visual:{type:"fraction", num:3, den:8, caption:"8 片裡吃掉 3 片"}}}
+    ]},
+    {title:"二、填充題", questions:[
+      {no:"1", q:"一盒有 6 顆蛋，4 盒共有（　）顆蛋。", student:"24", answer:"24",
+       why:"每盒 6 顆，有 4 盒，就是 6 的 4 倍：6×4=24。",
+       quiz:{type:"fill", accept:["24","24顆"]},
+       guide:{steps:[
+         {ask:"每一盒有幾顆蛋？", say:"每盒 6 顆。"},
+         {ask:"有幾盒？", say:"4 盒，就是 4 個 6。"},
+         {ask:"4 個 6 加起來是多少？", say:"6+6+6+6=24，也可以算 6×4=24。"}],
+         tip:"「每一份一樣多」，就可以用乘法。",
+         visual:{type:"blocks", groups:[{label:"第1盒",count:6},{label:"第2盒",count:6},{label:"第3盒",count:6},{label:"第4盒",count:6}], caption:"4 盒，每盒 6 顆"}}},
+      {no:"2", q:"500 − 237 = （　）", student:"337", answer:"263",
+       why:"500 的十位和個位都是 0，不夠減要向百位借，借完百位剩 4，答案是 263。",
+       quiz:{type:"fill", accept:["263"]},
+       guide:{steps:[
+         {ask:"個位 0 減 7，夠不夠減？", say:"不夠減！十位也是 0，沒辦法借，要一路向百位借。"},
+         {ask:"百位 5 借出 1 個百，剩下多少？", say:"剩 4。借來的 1 個百變成 10 個十，十位變 10。"},
+         {ask:"十位再借 1 個十給個位，十位剩多少？個位變多少？", say:"十位剩 9，個位變 10。"},
+         {ask:"現在算：10−7、9−3、4−2。", say:"個位 3，十位 6，百位 2，答案是 263。"},
+         {ask:"", say:"你寫的 337，是百位忘記被借走了 1。"}],
+         tip:"借位以後，被借的那一位要記得「少 1」。",
+         visual:{type:"vertical", carry:" 4910", lines:["  500","− 237"], result:"  263", caption:"紅字：借位後每一位變成的數"}}},
+      {no:"3", q:"1 公尺 = （　）公分", student:"100", answer:"100",
+       why:"1 公尺就是 100 公分，像一根大人的手臂伸長再多一點。",
+       quiz:{type:"fill", accept:["100","100公分"]},
+       guide:{steps:[{ask:"", say:"1 公尺 = 100 公分，這個要背起來喔。"},{ask:"2 公尺是幾公分？", say:"2 個 100，就是 200 公分。"}], tip:"公尺換公分，後面加兩個 0。", visual:null}}
+    ]},
+    {title:"三、應用題", questions:[
+      {no:"1", q:"小美有 45 張貼紙，送給弟弟 18 張，又買了 9 張，現在有幾張？", student:"18", answer:"36 張",
+       why:"送出去要減，買進來要加：45−18=27，27+9=36。",
+       quiz:{type:"fill", accept:["36","36張"]},
+       guide:{steps:[
+         {ask:"送給弟弟，貼紙變多還是變少？", say:"變少，所以要用減的：45−18=27。"},
+         {ask:"又買了 9 張，變多還是變少？", say:"變多，所以要用加的：27+9=36。"},
+         {ask:"", say:"你算的 45−18−9，是把「買」也減掉了。買東西是變多喔！"}],
+         tip:"先想一想：變多用加，變少用減。",
+         visual:{type:"bar", parts:[{text:"送弟弟 18",value:18},{text:"剩下 27",value:27,hl:true},{text:"買 9",value:9,add:true}], caption:"45 張先拿走 18，再多 9 張 → 36 張"}}}
+    ]}
+  ]
+};
+
+/* ---------- visuals ---------- */
+function sanitizeSvg(src){
+  try {
+    const doc = new DOMParser().parseFromString(String(src), "image/svg+xml");
+    const svg = doc.documentElement;
+    if (!svg || svg.nodeName.toLowerCase()!=="svg" || doc.querySelector("parsererror")) return "";
+    svg.querySelectorAll("script,foreignObject,iframe,image,use,a,style").forEach(n=>n.remove());
+    svg.querySelectorAll("*").forEach(n=>[...n.attributes].forEach(a=>{ if(/^on/i.test(a.name)||/href/i.test(a.name)) n.removeAttribute(a.name); }));
+    [...svg.attributes].forEach(a=>{ if(/^on/i.test(a.name)) svg.removeAttribute(a.name); });
+    svg.removeAttribute("width"); svg.removeAttribute("height");
+    svg.setAttribute("style","max-width:100%;height:auto;max-height:340px");
+    return new XMLSerializer().serializeToString(svg);
+  } catch(e) { return ""; }
+}
+function viz(v){
+  if (!v || typeof v!=="object") return "";
+  let body = "";
+  const T = (x,y,s,size=13,anchor="middle",fill="var(--ink)") => `<text x="${x}" y="${y}" font-size="${size}" text-anchor="${anchor}" fill="${fill}" font-family="var(--f-body)">${esc(s)}</text>`;
+  try {
+    if (v.type==="blocks") {
+      const groups = (v.groups||[]).slice(0,8);
+      let y = 10, parts = [];
+      const per = 10, r = 9, gap = 22, lx = 70;
+      groups.forEach((g,gi)=>{
+        const n = Math.max(0, Math.min(40, Number(g.count)||0));
+        const rows = Math.max(1, Math.ceil(n/per));
+        parts.push(T(lx-10, y+r+5, g.label||"", 13, "end"));
+        for(let i=0;i<n;i++){ const cx = lx+10+(i%per)*gap, cy = y+r+Math.floor(i/per)*gap; parts.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${gi%2?'var(--blue)':'var(--red)'}" opacity=".85"/>`); }
+        y += rows*gap + 10;
+      });
+      body = `<svg viewBox="0 0 ${lx+20+per*gap} ${y}" width="${lx+20+per*gap}">${parts.join("")}</svg>`;
+    } else if (v.type==="numberline") {
+      let min = Number(v.min)||0, max = Number(v.max); if(!(max>min)) max = min+10;
+      let step = Number(v.step)>0 ? Number(v.step) : 1;
+      const W = 360, pad = 22, y = 90, sc = x => pad + (x-min)/(max-min)*(W-2*pad);
+      const cnt = (max-min)/step; const every = cnt>20 ? Math.ceil(cnt/10) : 1;
+      let p = `<line x1="${pad-8}" y1="${y}" x2="${W-pad+8}" y2="${y}" stroke="var(--ink)" stroke-width="2"/>`;
+      let k=0; for(let x=min; x<=max+1e-9; x+=step, k++){ p += `<line x1="${sc(x)}" y1="${y-6}" x2="${sc(x)}" y2="${y+6}" stroke="var(--ink)" stroke-width="1.5"/>`; if(k%every===0) p += T(sc(x), y+24, +x.toFixed(4), 12); }
+      (v.jumps||[]).slice(0,8).forEach(j=>{ const a=sc(Number(j.from)), b=sc(Number(j.to)), h=Math.min(55, 18+Math.abs(b-a)/3);
+        p += `<path d="M${a} ${y-4} Q ${(a+b)/2} ${y-4-h*2} ${b} ${y-4}" fill="none" stroke="var(--red)" stroke-width="2.5"/>` + `<circle cx="${b}" cy="${y-4}" r="4" fill="var(--red)"/>` + T((a+b)/2, y-8-h, j.label||"", 13, "middle", "var(--red)"); });
+      (v.marks||[]).slice(0,10).forEach(m=>{ p += `<circle cx="${sc(Number(m))}" cy="${y}" r="6" fill="var(--blue)"/>`; });
+      body = `<svg viewBox="0 0 ${W} 125" width="${W}">${p}</svg>`;
+    } else if (v.type==="bar") {
+      const parts = (v.parts||[]).slice(0,6); const total = parts.reduce((a,b)=>a+Math.max(0,Number(b.value)||0),0)||1;
+      const W = 360, pad = 8, h = 46; let x = pad, p = "";
+      parts.forEach((pt,i)=>{ const w = (W-2*pad)*(Math.max(0,Number(pt.value)||0)/total);
+        const fill = pt.hl ? "var(--blue)" : pt.add ? "var(--ok)" : "var(--red)";
+        p += `<rect x="${x}" y="20" width="${Math.max(2,w-3)}" height="${h}" rx="6" fill="${fill}" opacity="${pt.hl?.9:.7}"/>`;
+        p += T(x+w/2, 20+h/2+5, pt.text||pt.label||pt.value, 13, "middle", "#fff");
+        x += w; });
+      body = `<svg viewBox="0 0 ${W} 80" width="${W}">${p}</svg>`;
+    } else if (v.type==="fraction") {
+      const den = Math.max(1, Math.min(16, Math.round(Number(v.den)||1))), num = Math.max(0, Math.min(den, Math.round(Number(v.num)||0)));
+      const cx=80, cy=80, r=66; let p="";
+      for(let i=0;i<den;i++){ const a0 = -Math.PI/2 + i*2*Math.PI/den, a1 = a0 + 2*Math.PI/den;
+        const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0), x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+        p += den===1 ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${num?'var(--red)':'var(--card)'}" stroke="var(--ink)" stroke-width="2"/>`
+          : `<path d="M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z" fill="${i<num?'var(--red)':'var(--card)'}" opacity="${i<num?.85:1}" stroke="var(--ink)" stroke-width="2"/>`; }
+      p += `<line x1="200" y1="80" x2="250" y2="80" stroke="var(--ink)" stroke-width="3"/>` + T(225,68,num,30) + T(225,116,den,30);
+      body = `<svg viewBox="0 0 280 160" width="280">${p}</svg>`;
+    } else if (v.type==="vertical") {
+      const lines = (v.lines||[]).map(String);
+      const width = Math.max(...lines.map(l=>l.length), String(v.result||"").length, String(v.carry||"").length);
+      const pad = s => String(s||"").padStart(width," ");
+      body = `<div class="vert">${v.carry?`<div class="carry">${esc(pad(v.carry))}</div>`:""}${lines.map(l=>`<div>${esc(pad(l))}</div>`).join("")}${v.result!==undefined?`<div class="res">${esc(pad(v.result))}</div>`:""}</div>`;
+    } else if (v.type==="table") {
+      const rows = (v.rows||[]).slice(0,10);
+      body = `<table style="margin:0 auto;border-collapse:collapse;font-size:17px">${rows.map((r,i)=>`<tr>${(r||[]).map(c=>`<td style="border:1.5px solid var(--line);padding:6px 12px;${i===0?'font-weight:700;background:var(--card)':''}">${Z(c)}</td>`).join("")}</tr>`).join("")}</table>`;
+    } else if (v.type==="svg") {
+      body = sanitizeSvg(v.svg);
+    }
+  } catch(e) { body = ""; }
+  if (!body) return "";
+  return `<div class="viz">${body}${v.caption?`<div class="cap">${Z(v.caption)}</div>`:""}</div>`;
+}
+
+/* ---------- views ---------- */
+function qrSvg(text){
+  if (!text || !window.qrcode) return "";
+  try { const q = qrcode(0,"M"); q.addData(text); q.make(); return q.createSvgTag({cellSize:6, margin:2, scalable:true}); } catch(e){ return ""; }
+}
+function viewHome(){
+  const qr = qrSvg(myUrl());
+  const resume = S.exam && !S.exam.demo && S.view==="home" ? "" : "";
+  const hasProgress = S.exam && allQs().some(x=>x.q.mark);
+  return `${topBar()}
+  <div class="stack">
+    <div class="hero"><h1>${Z("考卷訂正小老師")}</h1><p>${Z("拍下考卷，一大題一大題訂正。寫錯的題目，小老師一步一步陪你想。")}</p></div>
+    ${hasProgress?`<div class="card row" style="justify-content:space-between"><div><div class="label">上次還沒訂正完</div><b>${esc(S.exam.title||"考卷")}</b></div><div class="row"><button class="btn sm blue" data-act="resume">${Z("繼續訂正")}</button><button class="btn sm ghost" data-act="reset">清除</button></div></div>`:""}
+    <div class="home-grid">
+      <div class="card stack">
+        <div class="label">學生</div>
+        <h2>${Z("開始訂正我的考卷")}</h2>
+        ${PRESET?`<button class="btn primary wide" data-act="start-preset">${Z("開始訂正：" + (PRESET.title||"考卷"))}</button>`:""}
+        ${!HOSTED?`<button class="btn ${PRESET?'ghost':'primary'} wide" data-act="go-capture">${Z("拍我的考卷")}</button>`:""}
+        ${HOSTED&&!PRESET?`<div class="drop">${Z("老師還沒有放考卷資料，可以先用範例考卷練習。")}</div>`:""}
+        <button class="btn ghost wide" data-act="demo">${Z("先用範例考卷試試看")}</button>
+        <ol class="steps-mini"><li>拍考卷（可以拍好幾張）</li><li>每一大題點「我寫對了／我寫錯了」</li><li>檢討好了，拿給大人按住批改</li><li>最後做錯題測驗</li></ol>
+      </div>
+      <div class="card stack">
+        <div class="label">老師／家長</div>
+        <h2>學生掃描這個 QR code</h2>
+        ${qr?`<button class="qrbox" data-act="qr-open" aria-label="放大 QR code">${qr}</button>`:`<div class="drop">貼上這個網頁的連結，就會產生 QR code</div>`}
+        ${!HOSTED?`<div class="field"><label for="link" class="muted" style="font-size:14px">QR code 要連到的網址（放上 GitHub Pages 後，可改成那個網址）</label><input id="link" type="url" inputmode="url" value="${esc(S.link)}" placeholder="https://..."></div>`:""}
+        <p class="muted" style="font-size:14px;margin:0">點 QR code 會放大到全螢幕，學生用平板相機掃描就能打開這一頁。</p>
+      </div>
+      ${!HOSTED?exportCard():""}
+    </div>
+  </div>`;
+}
+function exportCard(){
+  const ex = S.exam && !S.exam.presetId ? S.exam : null;
+  let inner;
+  if (exporting) inner = `<p style="margin:0">${esc(exporting.msg)}</p><div class="bar-prog"><i style="width:${Math.round(exporting.done/Math.max(1,exporting.total)*100)}%"></i></div>`;
+  else if (!ex) inner = `<p class="muted" style="margin:0;font-size:15px">先按「拍我的考卷」拍下考卷（最好附上答案卷）讓小老師分析，分析好按左上角回首頁，這裡就能下載考卷資料。</p>`;
+  else inner = `<p style="margin:0">目前的考卷：<b>${esc(ex.title)}</b>（${ex.sections.reduce((a,s)=>a+s.questions.length,0)} 題）</p>
+    <button class="btn blue wide" data-act="export" ${sample?"":"disabled"}>產生全部詳解並下載 exam.json</button>
+    ${S.exportErr?`<div class="err">${esc(S.exportErr)}</div>`:""}`;
+  return `<div class="card stack" style="grid-column:1/-1">
+    <div class="label">老師：做成 GitHub Pages 版</div>
+    <h2>下載考卷資料</h2>
+    <p class="muted" style="margin:0;font-size:15px">GitHub Pages 上沒有 Claude，學生不能拍照分析。請在這裡先分析好考卷，下載 exam.json，和 index.html 一起放到 GitHub。學生打開就能直接訂正。</p>
+    ${inner}</div>`;
+}
+function presetToExam(p){
+  return { title:String(p.title||"考卷"), grade:String(p.grade||""), subject:String(p.subject||""), presetId:String(p.id||p.title||"preset"),
+    sections:(p.sections||[]).map(s=>({title:String(s.title||"大題"), questions:(s.questions||[]).map(q=>({ no:String(q.no??""), q:String(q.q||""),
+      options:Array.isArray(q.options)?q.options:null, student:"", answer:String(q.answer??""), why:String(q.why||""), quiz:q.quiz||{type:"self"}, guide:q.guide||null, mark:null }))})) };
+}
+function viewCapture(){
+  const th = (arr,kind) => arr.map((p,i)=>`<div class="thumb"><img src="${p.url}" alt="第 ${i+1} 張"><span class="n">${i+1}</span><button data-act="rm" data-kind="${kind}" data-i="${i}" aria-label="刪除第 ${i+1} 張">×</button></div>`).join("");
+  const can = sample && sampleImages;
+  return `${topBar()}
+  <div class="stack">
+    <div><button class="link" data-act="home">← 回首頁</button></div>
+    <div class="card stack">
+      <div class="label">第一步</div>
+      <h2>${Z("把考卷拍清楚")}</h2>
+      <p class="muted" style="margin:0">${Z("考卷放平、光線亮亮的，整張都要拍進去。正反面或好幾張，都可以一張一張加進來。")}</p>
+      <div class="row">
+        <label class="btn primary" for="cam" style="flex:1">${Z("拍照")}</label>
+        <label class="btn ghost" for="pick" style="flex:1">${Z("從相簿選")}</label>
+      </div>
+      <input id="cam" type="file" accept="image/*" capture="environment" hidden>
+      <input id="pick" type="file" accept="image/*" multiple hidden>
+      ${photos.length?`<div class="thumbs">${th(photos,"p")}</div>`:`<div class="drop">還沒有照片</div>`}
+    </div>
+    <div class="card stack">
+      <details class="opt"><summary>老師有標準答案卷？（可以不用）</summary>
+        <div class="stack" style="margin-top:10px">
+          <p class="muted" style="margin:0;font-size:15px">拍下答案卷，小老師會照答案卷對答案，更準確。</p>
+          <label class="btn ghost sm" for="keypick">加入答案卷照片</label>
+          <input id="keypick" type="file" accept="image/*" multiple hidden>
+          ${keyPhotos.length?`<div class="thumbs">${th(keyPhotos,"k")}</div>`:""}
+        </div>
+      </details>
+      <div class="field"><label for="grade" class="muted" style="font-size:14px">幾年級？（讓說明更好懂）</label>
+        <select id="grade">${["","一年級","二年級","三年級","四年級","五年級","六年級","國中"].map(g=>`<option ${S.grade===g?"selected":""} value="${g}">${g||"不確定"}</option>`).join("")}</select></div>
+    </div>
+    ${analyzeErr?`<div class="err">${esc(analyzeErr)}</div>`:""}
+    ${!can && sampleChecked ? `<div class="err">這個畫面目前不能請小老師看照片（需要登入 Claude 並允許這一頁使用）。可以先用範例考卷試試看。</div>`:""}
+  </div>
+  <div class="bottom"><div class="in"><button class="btn primary wide" data-act="analyze" ${photos.length&&can?"":"disabled"}>${Z(photos.length?"請小老師看考卷":"先拍考卷")}</button></div></div>`;
+}
+function viewAnalyzing(){
+  return `${topBar()}
+  <div class="card stack" style="margin-top:20px;text-align:center">
+    <div class="pen"><svg width="120" height="100" viewBox="0 0 120 100"><path d="M15 55 L45 82 L105 18"/></svg></div>
+    <h2>${Z("小老師正在看你的考卷")}</h2>
+    <p class="muted" style="margin:0">${Z(analyzeMsg||"要讀題目、看你寫的答案，大概需要一分鐘，請等一下喔。")}</p>
+    <div><button class="btn ghost sm" data-act="stop">停止</button></div>
+  </div>`;
+}
+function marksOf(si){ return S.exam.sections[si].questions.map(q=>q.mark); }
+function viewReview(){
+  const ex = S.exam, si = S.sec, sec = ex.sections[si];
+  const left = sec.questions.filter(q=>!q.mark).length;
+  const allRight = sec.questions.every(q=>q.mark==="right") && sec.allRight;
+  const prog = ex.sections.map((s,i)=>`<i class="${i<si?'done':i===si?'now':''}"></i>`).join("");
+  return `${topBar(`<span class="chip">第 ${si+1} / ${ex.sections.length} 大題</span>`)}
+  <div class="progress" aria-hidden="true">${prog}</div>
+  <div class="sec-head">
+    <h2>${Z(sec.title)}</h2>
+    <button class="allright" data-act="allright" aria-pressed="${!!allRight}">${Z(allRight?"這一大題我全對 ✓":"這一大題我全對")}</button>
+  </div>
+  <div class="stack">${sec.questions.map((q,qi)=>qCard(q,si,qi)).join("")}</div>
+  <div class="bottom"><div class="in"><button class="btn ${left?'ghost':'primary'} wide" data-act="reviewed" ${left?"disabled":""}>${Z(left?`還有 ${left} 題沒點`:"檢討好了")}</button></div></div>`;
+}
+function qCard(q,si,qi){
+  const id = qid(si,qi);
+  const m = q.mark;
+  let h = `<div class="card q ${m?'m-'+m:''}" id="q-${id}">
+    <div class="qno"><b>第 ${esc(q.no||qi+1)} 題</b>${m?`<span class="stamp ${m==='right'?'r':'w'}">${m==='right'?'寫對了':'要訂正'}</span>`:""}</div>
+    <div class="qtext">${Z(q.q)}</div>
+    ${q.options&&q.options.length?`<div class="opts">${q.options.map(o=>`<div>${Z(o)}</div>`).join("")}</div>`:""}
+    ${q.student?`<div class="mine">${Z("小老師看到你寫：")}<span>${esc(q.student)}</span></div>`:""}`;
+  if (!m) {
+    h += `<div class="two"><button class="btn okb" data-act="mark" data-id="${id}" data-m="right">${Z("我寫對了")}</button><button class="btn nob" data-act="mark" data-id="${id}" data-m="wrong">${Z("我寫錯了")}</button></div>`;
+  } else {
+    h += `<div class="ans"><div class="k">正確答案</div><div class="v">${Z(q.answer)}</div>${q.why?`<div class="why">${Z(q.why)}</div>`:""}</div>`;
+    if (m==="wrong") h += guideBlock(q,id);
+    h += `<button class="link change" data-act="unmark" data-id="${id}">點錯了，重選</button>`;
+  }
+  return h + `</div>`;
+}
+function guideBlock(q,id){
+  const g = q.guide;
+  let h = `<div class="guide"><div class="guide-h"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1L19 8l-3-3L5 16z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>${Z("跟小老師一步一步想")}</div>`;
+  if (!g) {
+    if (q.gErr) return h + `<p class="muted" style="margin:0">${esc(q.gErr)}</p><button class="btn ghost sm" data-act="guide" data-id="${id}">再試一次</button></div>`;
+    if (q.gLoading) return h + `<div class="loading"><span class="dots"><i></i><i></i><i></i></span>${Z("小老師正在想怎麼教你…")}</div></div>`;
+    return h + `<button class="btn blue" data-act="guide" data-id="${id}">${Z("開始")}</button></div>`;
+  }
+  const steps = g.steps||[];
+  const shown = Math.min(q.gs||0, steps.length-1);
+  if (g.visual) h += viz(g.visual);
+  for (let i=0;i<=shown;i++){
+    const st = steps[i]; if(!st) continue;
+    const isCur = i===shown, revealed = !isCur || q.gr || !st.ask;
+    h += `<div class="gstep"><span class="num">${i+1}</span><div>${st.ask?`<div class="ask">${Z(st.ask)}</div>`:""}${revealed?`<div class="say">${Z(st.say)}</div>`:`<button class="btn ghost sm" data-act="reveal" data-id="${id}" style="margin-top:6px">${Z("我想好了，看說明")}</button>`}</div></div>`;
+  }
+  const curRevealed = q.gr || !(steps[shown]||{}).ask;
+  if (curRevealed && shown < steps.length-1) h += `<button class="btn blue" data-act="next" data-id="${id}">${Z("下一步")}</button>`;
+  if (curRevealed && shown >= steps.length-1) {
+    if (g.tip) h += `<div class="tip"><b>${Z("記住小撇步：")}</b>${Z(g.tip)}</div>`;
+  }
+  return h + `</div>`;
+}
+function viewAdult(){
+  const sec = S.exam.sections[S.sec];
+  const items = sec.questions.map((q,qi)=>{
+    const same = q.student && !/看不清楚/.test(q.student) && (norm(q.student)===norm(q.answer) || (q.options && optionKey(q.student)===optionKey(q.answer)));
+    const diff = q.student && !/看不清楚/.test(q.student) && !same;
+    let flag = "";
+    if (q.mark==="right" && diff) flag = `小老師讀到「${esc(q.student)}」，和答案「${esc(q.answer)}」不一樣，請確認。`;
+    if (q.mark==="wrong" && same) flag = `小老師讀到的答案看起來是對的，請確認。`;
+    return `<div class="it"><b>${esc(q.no||qi+1)}.</b><div class="t">${esc(q.q)}<br><span class="muted">答案：${esc(q.answer)}</span></div><span class="${q.mark==='right'?'res-ok':'res-no'}">${q.mark==='right'?'對':'錯'}</span>${flag?`<div class="flag">${flag}</div>`:""}</div>`;
+  }).join("");
+  const last = S.sec >= S.exam.sections.length-1;
+  return `${topBar()}
+  <div class="adult">
+    <h1>${Z("請拿給大人批改")}</h1>
+    <div class="card stack">
+      <div class="label">${esc(sec.title)}　學生自己的檢討</div>
+      <div class="sum">${items}</div>
+    </div>
+    <button class="hold" id="hold"><span class="fill" id="holdfill"></span><span>大人按住 2 秒，${last?"完成訂正":"開放下一大題"}</span></button>
+    <button class="link" data-act="back-review" style="align-self:center">${Z("還要再看一下")}</button>
+  </div>`;
+}
+function wrongIds(){ return allQs().filter(x=>x.q.mark==="wrong").map(x=>x.id); }
+function viewDone(){
+  const w = wrongIds();
+  return `${topBar()}
+  <div class="card stack celebrate">
+    ${checkArt()}
+    <h1>${Z("考卷訂正完成！")}</h1>
+    ${w.length?`<p style="margin:0">${Z(`你訂正了 ${w.length} 題寫錯的題目。現在來做錯題測驗，看看是不是真的學會了。`)}</p>
+      <button class="btn primary wide" data-act="start-quiz">${Z("開始錯題測驗")}</button>`
+    :`<p style="margin:0">${Z("全部都寫對了，太厲害了！")}</p><button class="btn ghost wide" data-act="newexam">${Z("訂正另一張考卷")}</button>`}
+  </div>`;
+}
+function checkArt(){ return `<svg viewBox="0 0 140 140" aria-hidden="true"><circle cx="70" cy="70" r="58" fill="none" stroke="var(--red)" stroke-width="7"/><path d="M42 72l18 18 38-42" fill="none" stroke="var(--red)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+function viewQuiz(){
+  const Q = S.quiz;
+  const done = Q.items.filter(id=>{ const a=Q.answers[id]; return a!==undefined && a!==""; }).length;
+  const cards = Q.items.map((id,i)=>{
+    const q = getQ(id), z = q.quiz||{type:"self"}, a = Q.answers[id];
+    let inp = "";
+    if (z.type==="choice" && (z.options||q.options)) {
+      inp = `<div class="qz-choice">${(z.options||q.options).map((o,oi)=>`<button data-act="pick" data-id="${id}" data-v="${esc(o)}" aria-pressed="${a===o}">${Z(o)}</button>`).join("")}</div>`;
+    } else if (z.type==="fill") {
+      inp = `<input class="qz-in" id="in-${id}" data-id="${id}" value="${esc(a||"")}" placeholder="寫下答案" autocomplete="off">`;
+    } else {
+      inp = `<div class="drop" style="text-align:left">${Z("這一題請寫在紙上。寫好了，按下面的按鈕。")}</div><button class="btn ghost sm" data-act="pick" data-id="${id}" data-v="寫好了" aria-pressed="${a==='寫好了'}">${Z(a==="寫好了"?"寫好了 ✓":"我寫好了")}</button>`;
+    }
+    return `<div class="card q"><div class="qno"><b>第 ${i+1} 題</b><span class="muted" style="margin-left:auto;font-size:14px">${esc(S.exam.sections[+id.split("-")[0]].title)}</span></div>
+      <div class="qtext">${Z(z.prompt||q.q)}</div>${inp}</div>`;
+  }).join("");
+  return `${topBar(`<span class="chip">錯題測驗${Q.round>1?` 第 ${Q.round} 次`:""}</span>`)}
+  <div class="sec-head"><h2>${Z(Q.round>1?"再做一次":"錯題測驗")}</h2><p class="muted" style="margin:0">${Z("不要看前面的答案，自己想想看！")}</p></div>
+  <div class="stack">${cards}</div>
+  <div class="bottom"><div class="in"><button class="btn primary wide" data-act="submit" ${done<Q.items.length?"disabled":""}>${Z(done<Q.items.length?`還有 ${Q.items.length-done} 題沒寫`:"交卷")}</button></div></div>`;
+}
+function judge(id){
+  const q = getQ(id), z = q.quiz||{type:"self"}, a = S.quiz.answers[id];
+  if (z.type==="choice") { const ans = z.answer||q.answer; return optionKey(a)===optionKey(ans) || norm(a)===norm(ans); }
+  if (z.type==="fill") { const acc = [...(z.accept||[]), q.answer].filter(Boolean).map(norm); return acc.includes(norm(a)); }
+  return S.quiz.self?.[id] === true ? true : S.quiz.self?.[id] === false ? false : null;
+}
+function viewResult(){
+  const Q = S.quiz;
+  const res = Q.items.map(id=>({id, ok:judge(id)}));
+  const pending = res.some(r=>r.ok===null);
+  const okN = res.filter(r=>r.ok===true).length;
+  const wrong = res.filter(r=>r.ok===false);
+  const cards = res.map((r,i)=>{
+    const q = getQ(r.id), z=q.quiz||{type:"self"}, a = Q.answers[r.id];
+    const g = q.guide;
+    let selfBtns = "";
+    if (r.ok===null) selfBtns = `<div class="two"><button class="btn okb" data-act="self" data-id="${r.id}" data-v="1">${Z("我寫對了")}</button><button class="btn nob" data-act="self" data-id="${r.id}" data-v="0">${Z("我寫錯了")}</button></div>`;
+    return `<div class="card q ${r.ok===true?'m-right':r.ok===false?'m-wrong':''}">
+      <div class="qno"><b>第 ${i+1} 題</b>${r.ok!==null?`<span class="stamp ${r.ok?'r':'w'}">${r.ok?'答對':'答錯'}</span>`:""}</div>
+      <div class="qtext">${Z(z.prompt||q.q)}</div>
+      ${z.type!=="self"?`<div class="mine">${Z("你的答案：")}<span>${esc(a)}</span></div>`:""}
+      <div class="ans"><div class="k">正確答案</div><div class="v">${Z(q.answer)}</div>${q.why?`<div class="why">${Z(q.why)}</div>`:""}</div>
+      ${g&&g.steps?`<details class="more" ${r.ok===false?"open":""}><summary>${Z("看詳解")}</summary><div class="stack" style="margin-top:10px">${g.visual?viz(g.visual):""}${g.steps.map((s,k)=>`<div class="gstep"><span class="num">${k+1}</span><div>${s.ask?`<div class="ask">${Z(s.ask)}</div>`:""}<div class="say">${Z(s.say)}</div></div></div>`).join("")}${g.tip?`<div class="tip"><b>${Z("小撇步：")}</b>${Z(g.tip)}</div>`:""}</div></details>`:""}
+      ${selfBtns}
+    </div>`;
+  }).join("");
+  const allOk = !pending && wrong.length===0;
+  return `${topBar(`<span class="chip">成績</span>`)}
+  <div class="card stack" style="text-align:center">
+    ${allOk?checkArt():""}
+    <div class="score">${okN} / ${res.length}</div>
+    <p style="margin:0">${Z(pending?"有題目要你自己對答案，請在下面點選。":allOk?"全部答對，你真的學會了！":`還有 ${wrong.length} 題要加油，看完詳解再做一次。`)}</p>
+  </div>
+  <div class="stack" style="margin-top:16px">${cards}</div>
+  <div class="bottom"><div class="in">${pending?`<button class="btn ghost wide" disabled>${Z("先自己對完答案")}</button>`:allOk?`<button class="btn ghost wide" data-act="newexam">${Z("訂正另一張考卷")}</button>`:`<button class="btn primary wide" data-act="retry">${Z(`錯的 ${wrong.length} 題再做一次`)}</button>`}</div></div>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.documentElement.classList.toggle("nozy", !S.zy);
+  const y = window.scrollY;
+  const v = S.view;
+  $app.innerHTML = v==="capture"?viewCapture(): v==="analyzing"?viewAnalyzing(): v==="review"?viewReview(): v==="adult"?viewAdult(): v==="done"?viewDone(): v==="quiz"?viewQuiz(): v==="result"?viewResult(): viewHome();
+  bindAfter();
+  return y;
+}
+function go(view, top=true){ S.view = view; save(); render(); if(top) window.scrollTo({top:0}); }
+function rerender(){ const y = window.scrollY; render(); window.scrollTo({top:y}); }
+
+function bindAfter(){
+  const link = document.getElementById("link");
+  if (link) link.addEventListener("input", e=>{ S.link = e.target.value.trim(); save(); const box = link.closest(".card"); const old = box.querySelector(".qrbox,.drop"); const svg = qrSvg(S.link); const nw = document.createElement("div"); nw.className = svg?"qrbox":"drop"; nw.innerHTML = svg || "貼上這個網頁的分享連結，就會產生 QR code"; old.replaceWith(nw); });
+  ["cam","pick","keypick"].forEach(k=>{ const el = document.getElementById(k); if(el) el.addEventListener("change", e=>addFiles(e.target.files, k==="keypick")); });
+  const gr = document.getElementById("grade"); if (gr) gr.addEventListener("change", e=>{ S.grade = e.target.value; save(); });
+  document.querySelectorAll(".qz-in").forEach(inp=>{
+    inp.addEventListener("input", e=>{ S.quiz.answers[inp.dataset.id] = inp.value; save(); updateSubmit(); });
+  });
+  const hold = document.getElementById("hold"); if (hold) setupHold(hold);
+}
+function updateSubmit(){
+  const Q = S.quiz; const btn = document.querySelector('[data-act="submit"]'); if(!btn) return;
+  const left = Q.items.filter(id=>{ const a=Q.answers[id]; return a===undefined || String(a).trim()===""; }).length;
+  btn.disabled = left>0; btn.innerHTML = Z(left?`還有 ${left} 題沒寫`:"交卷");
+}
+
+/* ---------- photos ---------- */
+async function addFiles(files, isKey){
+  for (const f of [...(files||[])]) {
+    if (!/^image\//.test(f.type) && !/\.(jpe?g|png|webp|heic|gif)$/i.test(f.name)) continue;
+    try { const blob = await shrink(f, 2400); (isKey?keyPhotos:photos).push({blob, url:URL.createObjectURL(blob)}); } catch(e){ analyzeErr = "這張照片打不開，請換一張（建議用 JPG 或 PNG）。"; }
+  }
+  rerender();
+}
+function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
+async function shrink(file, max){
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImg(url);
+    const sc = Math.min(1, max/Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth*sc); c.height = Math.round(img.naturalHeight*sc);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    return await new Promise(r=>c.toBlob(r,"image/jpeg",.9));
+  } finally { URL.revokeObjectURL(url); }
+}
+// 直式的考卷切成上下兩半（重疊一點），讓字更清楚
+async function halves(blob){
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await loadImg(url);
+    const W = img.naturalWidth, H = img.naturalHeight;
+    if (H < W*1.15) return [blob];
+    const ov = Math.round(H*0.06), h = Math.round(H/2)+ov;
+    const out = [];
+    for (const y0 of [0, H-h]) { const c=document.createElement("canvas"); c.width=W; c.height=h; c.getContext("2d").drawImage(img,0,y0,W,h,0,0,W,h); out.push(await new Promise(r=>c.toBlob(r,"image/jpeg",.9))); }
+    return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+
+/* ---------- AI ---------- */
+const ERR = {
+  not_granted:"沒有允許這一頁使用 Claude，所以小老師沒辦法看照片。",
+  sampling_disabled:"這個帳號目前不能使用 Claude。",
+  rate_limited:"現在用太多次了，請等一下再試。",
+  session_expired:"請重新登入 Claude 再試一次。",
+  image_rejected:"照片太大或格式不對，請重拍一張。",
+  images_unavailable:"這個畫面不能傳照片給小老師。",
+  refused:"小老師沒辦法看這張照片，請換一張試試。",
+  invalid_json:"小老師的回答格式亂掉了，請再按一次。",
+  prompt_too_large:"照片太多了，請少拍幾張。"
+};
+const errMsg = e => ERR[e?.code] || "連線出了點問題，請再試一次。";
+
+async function analyze(){
+  if (!sample || !photos.length) return;
+  analyzeErr = ""; S.view = "analyzing"; analyzeMsg = ""; render();
+  analyzeCtl = new AbortController();
+  try {
+    const lim = await sample.limits().catch(()=>null);
+    const maxN = lim?.images?.maxCount || 20;
+    let imgs = [];
+    for (const p of photos) imgs.push(...await halves(p.blob));
+    let split = true;
+    if (imgs.length + keyPhotos.length > maxN) { imgs = photos.map(p=>p.blob); split = false; }
+    const keys = keyPhotos.map(p=>p.blob).slice(0, Math.max(0, maxN-imgs.length));
+    const grade = S.grade || "國小";
+    const prompt = `你是台灣國小老師的助教，要幫${grade}學生訂正考卷。
+附上的圖片：前 ${imgs.length} 張是學生寫過的考卷${split?"（每頁考卷切成上下兩半，有一點重疊，依序排列，重疊處的題目不要重複）":"（依頁碼順序）"}。${keys.length?`後面 ${keys.length} 張是老師的標準答案卷，正確答案請以答案卷為準。`:"沒有答案卷，正確答案請你自己仔細算或判斷，一定要正確。"}
+
+請讀出考卷上全部題目，依照考卷上的「大題」分組（例如「一、選擇題」「二、填充題」）。每一小題給：
+- no：小題題號（字串）
+- q：題目全文，用台灣用語、繁體中文。數學式用一般文字（如 3×4=？、2/5）。有圖的題目，在題目後面用括號簡短描述圖。
+- options：選擇題的選項陣列（例如 ["① 3","② 4"]），不是選擇題就不要這個欄位
+- student：學生寫的答案（照抄；看不清楚寫"看不清楚"；沒寫寫""）
+- answer：正確答案（選擇題寫選項代號加內容，如 "② 613"）
+- why：用${grade}小朋友聽得懂的話，一到兩句說明為什麼是這個答案
+- quiz：給學生重做這題用。選擇題 {"type":"choice","options":[同上],"answer":"正確選項原文"}；答案短、可以直接比對的 {"type":"fill","accept":["可以接受的寫法1","寫法2"]}（例如 ["36","36張"]）；需要畫圖、造句、長篇作答的 {"type":"self"}
+
+不要判斷學生對錯，也不要評分。考卷上若有老師的紅筆批改，忽略它。
+只回覆 JSON，格式：
+{"title":"考卷名稱（例如 三年級數學第二單元）","grade":"幾年級（看不出來就寫空字串）","subject":"科目","sections":[{"title":"一、選擇題","questions":[{"no":"1","q":"...","options":["..."],"student":"...","answer":"...","why":"...","quiz":{...}}]}]}`;
+    const data = await sample.json(prompt, { images:[...imgs, ...keys], modelTier:"complex", signal:analyzeCtl.signal,
+      onText:()=>{ if(analyzeMsg!=="讀到題目了，正在整理…"){ analyzeMsg="讀到題目了，正在整理…"; const p=document.querySelector(".card p.muted"); if(p) p.innerHTML=Z(analyzeMsg); } } });
+    if (!data || !Array.isArray(data.sections) || !data.sections.length) throw {code:"empty"};
+    data.sections = data.sections.filter(s=>s && Array.isArray(s.questions) && s.questions.length).map(s=>({title:String(s.title||"大題"), questions:s.questions.map(q=>({
+      no:String(q.no??""), q:String(q.q||""), options:Array.isArray(q.options)?q.options.map(String):null, student:String(q.student??""),
+      answer:String(q.answer??""), why:String(q.why||""), quiz:q.quiz&&typeof q.quiz==="object"?q.quiz:{type:"self"}, mark:null, guide:null }))}));
+    if (!data.sections.length) throw {code:"empty"};
+    if (data.grade && !S.grade) S.grade = data.grade;
+    S.exam = {title:String(data.title||"我的考卷"), grade:String(data.grade||S.grade||""), subject:String(data.subject||""), sections:data.sections};
+    S.sec = 0; S.quiz = null;
+    go("review");
+  } catch(e) {
+    if (e?.code==="cancelled") { S.view="capture"; render(); return; }
+    analyzeErr = e?.code==="empty" ? "小老師在照片裡找不到題目，請把考卷拍清楚一點再試。" : errMsg(e);
+    S.view = "capture"; render();
+  }
+}
+
+function guideRules(grade){ return `請設計「引導式解題」：一步一步帶小朋友自己想出答案。
+- 用${grade}小朋友聽得懂的短句，每句不超過 30 個字，繁體中文、台灣用語，不用艱深詞彙。
+- 3 到 5 步。每一步有 ask（問小朋友的一個小問題，讓他先想；可以是空字串）和 say（這一步的說明或答案）。
+- 如果看得出學生為什麼會寫錯，最後一步用 say 溫柔地點出來（ask 留空）。
+- tip：一句好記的小撇步。
+- visual：選一個最能幫助理解的圖，不需要圖就給 null。可用格式：
+  {"type":"blocks","groups":[{"label":"短文字","count":數字}],"caption":"說明"}  數數量用，每組最多 40 個
+  {"type":"numberline","min":0,"max":20,"step":1,"jumps":[{"from":3,"to":8,"label":"+5"}],"marks":[3],"caption":"說明"}
+  {"type":"bar","parts":[{"text":"顯示文字","value":數字,"hl":true}],"caption":"說明"}  線段圖／比較量
+  {"type":"fraction","num":3,"den":4,"caption":"說明"}
+  {"type":"vertical","carry":"進位或借位後的數字（和算式對齊，可省略）","lines":["  345","+ 278"],"result":"  623","caption":"說明"}  直式計算，請用空白右對齊
+  {"type":"table","rows":[["標題1","標題2"],["a","b"]],"caption":"說明"}
+  {"type":"svg","svg":"<svg viewBox='0 0 300 200'>...</svg>","caption":"說明"}  只在幾何、圖形題使用；線條簡單，文字用中文`; }
+async function loadGuide(id){
+  const q = getQ(id);
+  if (q.guide || q.gLoading) return;
+  if (!sample) { q.gErr = "這個畫面不能請小老師說明，請看上面的正確答案。"; rerender(); return; }
+  q.gLoading = true; q.gErr = ""; rerender();
+  const grade = S.exam.grade || S.grade || "國小";
+  const prompt = `你是溫柔又有耐心的台灣國小老師，正在陪一位${grade}學生訂正一題寫錯的題目。
+科目：${S.exam.subject||"未知"}
+題目：${q.q}
+${q.options?`選項：${q.options.join("　")}\n`:""}學生的答案：${q.student||"（沒寫或看不清楚）"}
+正確答案：${q.answer}
+
+${guideRules(grade)}
+只回覆 JSON：{"steps":[{"ask":"...","say":"..."}],"tip":"...","visual":null}`;
+  try {
+    const g = await sample.json(prompt, { modelTier:"default", cache:{gcTime:86400000} });
+    if (!g || !Array.isArray(g.steps) || !g.steps.length) throw {code:"invalid_json"};
+    q.guide = { steps:g.steps.slice(0,6).map(s=>({ask:String(s.ask||""), say:String(s.say||"")})), tip:String(g.tip||""), visual:g.visual||null };
+    q.gs = 0; q.gr = false;
+  } catch(e) { q.gErr = errMsg(e); }
+  q.gLoading = false; save(); rerender();
+}
+
+async function exportExam(){
+  const ex = S.exam; if (!ex || !sample) return;
+  S.exportErr = "";
+  const grade = ex.grade || S.grade || "國小";
+  const todo = ex.sections.map((s,si)=>({s,si})).filter(x=>x.s.questions.some(q=>!q.guide));
+  exporting = {done:0, total:todo.length, msg:"小老師正在幫每一題寫詳解…"}; rerender();
+  try {
+    for (const {s,si} of todo) {
+      exporting.msg = `正在寫「${s.title}」的詳解（${exporting.done+1}/${todo.length}）…`; rerender();
+      const need = s.questions.map((q,qi)=>({q,qi})).filter(x=>!x.q.guide);
+      const list = need.map((x,k)=>`第${k+1}題｜題目：${x.q.q}${x.q.options?"｜選項："+x.q.options.join("　"):""}｜正確答案：${x.q.answer}`).join("\n");
+      const prompt = `你是溫柔又有耐心的台灣國小老師，要幫${grade}學生準備訂正用的詳解。科目：${ex.subject||"未知"}。
+學生寫錯了下面的題目（不知道學生寫了什麼，請用小朋友常見的錯誤想法來引導，最後一步可以提醒常見錯誤）。
+${list}
+
+每一題都要：
+${guideRules(grade)}
+只回覆 JSON：{"guides":[{"steps":[{"ask":"...","say":"..."}],"tip":"...","visual":null}]}，guides 要有 ${need.length} 個，順序和題目一樣。`;
+      const r = await sample.json(prompt, {modelTier:"default"});
+      const gs = Array.isArray(r?.guides) ? r.guides : [];
+      need.forEach((x,k)=>{ const g = gs[k]; if (g && Array.isArray(g.steps) && g.steps.length) x.q.guide = {steps:g.steps.slice(0,6).map(t=>({ask:String(t.ask||""),say:String(t.say||"")})), tip:String(g.tip||""), visual:g.visual||null}; });
+      exporting.done++; save();
+    }
+    const out = { version:1, id: Date.now().toString(36), title:ex.title, grade:ex.grade, subject:ex.subject,
+      sections: ex.sections.map(s=>({title:s.title, questions:s.questions.map(q=>({no:q.no,q:q.q,options:q.options||undefined,answer:q.answer,why:q.why,quiz:q.quiz,guide:q.guide||null}))})) };
+    exporting.msg = "準備下載…"; rerender();
+    if (!downloads) throw {code:"no_dl"};
+    await downloads.save({filename:"exam.json", data:JSON.stringify(out, null, 1)});
+  } catch(e) {
+    S.exportErr = e?.code==="no_dl" ? "這個畫面不能下載檔案。" : e?.code==="cancelled"||e?.code==="declined" ? "" : ("沒有下載成功：" + errMsg(e));
+  }
+  exporting = null; save(); rerender();
+}
+function drawQrFull(){
+  let el = document.getElementById("qrfull");
+  if (!qrOpen) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement("div"); el.id = "qrfull"; el.className = "qrfull"; el.setAttribute("role","dialog"); el.setAttribute("aria-label","QR code"); document.body.appendChild(el); }
+  const u = myUrl();
+  el.innerHTML = `<button class="x" data-act="qr-close">關閉</button><h2>${Z("用平板的相機掃描")}</h2><div class="big">${qrSvg(u)}</div><div class="u">${esc(u)}</div>`;
+  try { el.requestFullscreen?.().catch(()=>{}); } catch(e) {}
+}
+document.addEventListener("keydown", e=>{ if (e.key==="Escape" && qrOpen) { qrOpen=false; drawQrFull(); } });
+document.addEventListener("fullscreenchange", ()=>{ if (!document.fullscreenElement && qrOpen) { qrOpen=false; drawQrFull(); } });
+
+/* ---------- hold to unlock ---------- */
+function setupHold(btn){
+  const fill = document.getElementById("holdfill");
+  let t0 = 0, raf = 0, active = false;
+  const DUR = 2000;
+  const tick = () => { if(!active) return; const p = Math.min(1,(performance.now()-t0)/DUR); fill.style.width = (p*100)+"%"; if (p>=1) { active=false; unlock(); return; } raf = requestAnimationFrame(tick); };
+  const start = e => { if(active) return; e.preventDefault(); active = true; t0 = performance.now(); try{btn.setPointerCapture?.(e.pointerId)}catch(_){} raf = requestAnimationFrame(tick); };
+  const stop = () => { if(!active) return; active=false; cancelAnimationFrame(raf); fill.style.transition="width .25s"; fill.style.width="0"; setTimeout(()=>fill.style.transition="",260); };
+  btn.addEventListener("pointerdown", start);
+  ["pointerup","pointercancel","pointerleave"].forEach(ev=>btn.addEventListener(ev, stop));
+  btn.addEventListener("contextmenu", e=>e.preventDefault());
+  btn.addEventListener("keydown", e=>{ if((e.key===" "||e.key==="Enter") && !e.repeat){ start(e); } });
+  btn.addEventListener("keyup", e=>{ if(e.key===" "||e.key==="Enter") stop(); });
+}
+function unlock(){
+  if (S.sec < S.exam.sections.length-1) { S.sec++; go("review"); }
+  else go("done");
+}
+
+/* ---------- actions ---------- */
+document.addEventListener("click", e=>{
+  const b = e.target.closest("[data-act]"); if(!b) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  switch(act){
+    case "zy": S.zy = !S.zy; save(); rerender(); break;
+    case "home": go("home"); break;
+    case "go-capture": analyzeErr=""; go("capture"); break;
+    case "demo": S.exam = JSON.parse(JSON.stringify(DEMO)); S.exam.sections.forEach(s=>s.questions.forEach(q=>{q.mark=null;})); S.sec=0; S.quiz=null; go("review"); break;
+    case "resume": go(S.quiz? (S.quiz.submitted?"result":"quiz") : "review"); break;
+    case "reset": S.exam=null; S.quiz=null; S.sec=0; go("home"); break;
+    case "newexam": S.exam=null; S.quiz=null; S.sec=0; photos=[]; keyPhotos=[]; go(HOSTED?"home":"capture"); break;
+    case "start-preset": if(PRESET){ S.exam = presetToExam(PRESET); S.sec=0; S.quiz=null; go("review"); } break;
+    case "qr-open": qrOpen = true; drawQrFull(); break;
+    case "qr-close": qrOpen = false; drawQrFull(); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(_){} break;
+    case "export": exportExam(); break;
+    case "rm": { const arr = b.dataset.kind==="k"?keyPhotos:photos; const [p] = arr.splice(+b.dataset.i,1); if(p) URL.revokeObjectURL(p.url); rerender(); break; }
+    case "analyze": analyze(); break;
+    case "stop": analyzeCtl?.abort(); break;
+    case "mark": { const q = getQ(id); q.mark = b.dataset.m; if(q.mark==="wrong" && q.guide){ q.gs=0; q.gr=false; } const sec=S.exam.sections[S.sec]; if(q.mark==="wrong") sec.allRight=false; save(); rerender(); if(q.mark==="wrong" && !q.guide) loadGuide(id); break; }
+    case "unmark": { const q = getQ(id); q.mark=null; S.exam.sections[S.sec].allRight=false; save(); rerender(); break; }
+    case "allright": { const sec=S.exam.sections[S.sec]; const on = !(sec.allRight && sec.questions.every(q=>q.mark==="right")); sec.allRight = on; sec.questions.forEach(q=>q.mark = on?"right":null); save(); rerender(); break; }
+    case "guide": { const q=getQ(id); q.gErr=""; loadGuide(id); break; }
+    case "reveal": { const q=getQ(id); q.gr=true; save(); rerender(); break; }
+    case "next": { const q=getQ(id); q.gs=(q.gs||0)+1; q.gr=false; save(); rerender(); break; }
+    case "reviewed": go("adult"); break;
+    case "back-review": go("review"); break;
+    case "start-quiz": S.quiz = {items:wrongIds(), answers:{}, self:{}, round:1, submitted:false}; go("quiz"); break;
+    case "pick": S.quiz.answers[id] = b.dataset.v; save(); rerender(); break;
+    case "submit": S.quiz.submitted = true; go("result"); break;
+    case "self": S.quiz.self[id] = b.dataset.v==="1"; save(); rerender(); break;
+    case "retry": { const still = S.quiz.items.filter(i=>judge(i)===false); S.quiz = {items:still, answers:{}, self:{}, round:(S.quiz.round||1)+1, submitted:false}; go("quiz"); break; }
+  }
+});
+
+/* ---------- boot ---------- */
+render();
+if (HOSTED) {
+  fetch("exam.json", {cache:"no-store"}).then(r=>r.ok?r.json():null).then(p=>{
+    if (!p || !Array.isArray(p.sections)) return;
+    PRESET = p;
+    if (S.exam && S.exam.presetId && S.exam.presetId !== String(p.id||p.title||"preset")) { S.exam=null; S.quiz=null; S.sec=0; S.view="home"; save(); }
+    rerender();
+  }).catch(()=>{});
+}
+(async () => {
+  try {
+    sample = window.claude ? await window.claude.use("sample") : null;
+    if (sample) { const lim = await sample.limits().catch(()=>null); sampleImages = !!lim?.images; }
+    downloads = window.claude ? await window.claude.use("downloads") : null;
+  } catch(e) { sample = null; }
+  sampleChecked = true;
+  if (S.view==="capture") rerender();
+})();
+// 函式庫比頁面晚載入時，重畫一次讓注音和 QR code 出現
+window.addEventListener("load", ()=>{ zCache.clear(); rerender(); if(qrOpen) drawQrFull(); });
+})();
+</script>
+
+</body>
+</html>
